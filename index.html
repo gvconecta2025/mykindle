@@ -32,7 +32,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
 
     <!-- Dependências -->
-    <!-- JSZip (Para extração de KPF se necessário e dependência do epub.js) -->
+    <!-- JSZip (Para extração de KPF/KCB se necessário e dependência do epub.js) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <!-- ePub.js (Motor de renderização principal) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/epub.js/0.3.93/epub.min.js"></script>
@@ -143,7 +143,7 @@
     <div id="drop-zone" class="fixed inset-0 bg-blue-500 bg-opacity-90 z-[90] flex-col items-center justify-center text-white">
         <i data-lucide="upload-cloud" class="w-24 h-24 mb-4"></i>
         <h2 class="text-3xl font-bold">Solte o arquivo aqui</h2>
-        <p class="mt-2">Suporta EPUB (KPF, MOBI, AZW3 via conversão requerida)</p>
+        <p class="mt-2">Suporta EPUB e Kindle Create (.kcb, .kpf)</p>
     </div>
 
     <!-- TELA 1: BIBLIOTECA (HOME) -->
@@ -156,7 +156,8 @@
                     <h1 class="text-xl font-semibold text-gray-800">Minha Biblioteca</h1>
                 </div>
                 <div>
-                    <input type="file" id="file-upload" class="hidden" accept=".epub,.kpf,.mobi,.azw3" multiple>
+                    <!-- Atualizado para aceitar .kcb -->
+                    <input type="file" id="file-upload" class="hidden" accept=".epub,.kpf,.kcb,.mobi,.azw3" multiple>
                     <button onclick="document.getElementById('file-upload').click()" class="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors text-sm font-medium">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                         Adicionar Livro
@@ -170,7 +171,7 @@
             <div id="empty-state" class="hidden flex-col items-center justify-center h-64 text-gray-500">
                 <i data-lucide="library" class="w-16 h-16 mb-4 opacity-50"></i>
                 <p class="text-lg">Sua biblioteca está vazia.</p>
-                <p class="text-sm mt-1">Adicione um livro EPUB para começar a ler.</p>
+                <p class="text-sm mt-1">Adicione um livro EPUB ou Kindle Create para começar.</p>
             </div>
             
             <div id="books-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
@@ -372,8 +373,8 @@
                 
                 if (ext === 'epub') {
                     await processAndSaveEpub(file);
-                } else if (ext === 'kpf') {
-                    await handleKpf(file);
+                } else if (ext === 'kpf' || ext === 'kcb') {
+                    await handleKindleCreate(file);
                 } else if (['mobi', 'azw3'].includes(ext)) {
                     alert(`O arquivo "${file.name}" é um formato proprietário antigo (${ext.toUpperCase()}).\nPara a melhor experiência neste leitor web, por favor, converta-o para EPUB (usando o Calibre, por exemplo) e faça o upload novamente.`);
                 } else {
@@ -385,16 +386,17 @@
             hideLoading();
         }
 
-        async function handleKpf(file) {
+        async function handleKindleCreate(file) {
             try {
-                // Tentar extrair KPF via JSZip procurando por um epub interno
-                showLoading(`Analisando pacote KPF: ${file.name}`);
+                // Kindle Create gera pacotes ZIP. Vamos tentar encontrar o EPUB embutido.
+                showLoading(`Extraindo pacote Kindle Create: ${file.name}`);
                 const arrayBuffer = await file.arrayBuffer();
                 const zip = await JSZip.loadAsync(arrayBuffer);
                 
                 let epubFound = null;
+                // Procura iterativamente por qualquer arquivo .epub dentro da estrutura do zip
                 for (let filename of Object.keys(zip.files)) {
-                    if (filename.endsWith('.epub')) {
+                    if (filename.toLowerCase().endsWith('.epub')) {
                         epubFound = zip.files[filename];
                         break;
                     }
@@ -403,15 +405,15 @@
                 if (epubFound) {
                     const epubBuffer = await epubFound.async('arraybuffer');
                     const epubBlob = new Blob([epubBuffer], { type: 'application/epub+zip' });
-                    // Hackish: Criar um File object a partir do Blob para reusar a função
-                    const fakeFile = new File([epubBlob], file.name.replace('.kpf', '.epub'), { type: 'application/epub+zip' });
+                    // Cria um arquivo fictício a partir dos dados internos extraídos
+                    const fakeFile = new File([epubBlob], file.name.replace(/\.(kpf|kcb)$/i, '.epub'), { type: 'application/epub+zip' });
                     await processAndSaveEpub(fakeFile);
                 } else {
-                    alert(`O arquivo KPF "${file.name}" não contém um EPUB extraível. A Amazon criptografa ou usa formatos proprietários internos em muitos KPFs. Por favor, exporte como EPUB ou converta.`);
+                    alert(`O arquivo "${file.name}" não possui um formato EPUB legível internamente. As versões de publicação final do Kindle Create às vezes aplicam criptografia/formato próprio. Se possível, tente fazer o upload do arquivo de projeto original (.kcb) gerado pelo seu Kindle Create ou exporte como EPUB diretamente.`);
                 }
             } catch (error) {
                 console.error(error);
-                alert("Erro ao tentar extrair o arquivo KPF.");
+                alert("Erro ao tentar extrair o arquivo do Kindle Create. O pacote pode ser incompatível ou estar corrompido.");
             }
         }
 
