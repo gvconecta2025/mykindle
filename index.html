@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -91,7 +91,7 @@
             </div>
             <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t dark:border-gray-700 flex justify-end gap-3">
                 <button onclick="toggleAddModal()" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Cancelar</button>
-                <button onclick="processDriveLink()" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm">Baixar e Salvar</button>
+                <button onclick="processDriveLink()" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm">Transferir e Guardar</button>
             </div>
         </div>
     </div>
@@ -102,7 +102,7 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <i data-lucide="book-open" class="text-blue-600"></i>
-                    <h1 class="text-xl font-semibold text-gray-800">Minha Biblioteca</h1>
+                    <h1 class="text-xl font-semibold text-gray-800">A Minha Biblioteca</h1>
                 </div>
                 <div>
                     <button onclick="toggleAddModal()" class="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors text-sm font-medium">
@@ -118,7 +118,7 @@
             <div id="empty-state" class="hidden flex-col items-center justify-center h-64 text-gray-500">
                 <i data-lucide="library" class="w-16 h-16 mb-4 opacity-50"></i>
                 <p class="text-lg">A sua biblioteca está vazia.</p>
-                <p class="text-sm mt-1">Clique em "Adicionar Link Drive" para baixar um PDF ou DOCX.</p>
+                <p class="text-sm mt-1">Clique em "Adicionar Link Drive" para transferir um PDF ou DOCX.</p>
             </div>
             
             <div id="books-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6"></div>
@@ -269,19 +269,40 @@
             showLoading("A transferir do Google Drive...\nIsto pode demorar dependendo do tamanho.");
 
             try {
-                // Endpoint nativo do Google para downloads de ficheiros públicos
+                // Link oficial de download do Drive
                 const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
-                // Proxy CORS gratuito para conseguir aceder à stream binária no navegador
-                const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(downloadUrl)}`;
-
-                const response = await fetch(proxyUrl);
                 
-                if (!response.ok) {
-                    throw new Error("Falha ao transferir. Certifique-se de que o link é 'Qualquer pessoa com o link'.");
+                // Sistema de Proxies Alternativos (Fallback)
+                const proxies = [
+                    `https://api.allorigins.win/raw?url=`,
+                    `https://corsproxy.io/?url=`
+                ];
+
+                let response = null;
+                for (const proxy of proxies) {
+                    try {
+                        const res = await fetch(proxy + encodeURIComponent(downloadUrl));
+                        if (res.ok) {
+                            response = res;
+                            break; // Funciona, parar de procurar!
+                        }
+                    } catch (e) {
+                        console.warn("Proxy falhou, a tentar o próximo...", proxy);
+                    }
+                }
+
+                if (!response || !response.ok) {
+                    throw new Error("Não foi possível transferir. Os servidores proxy falharam ou o ficheiro não está público.");
                 }
 
                 const arrayBuffer = await response.arrayBuffer();
                 
+                // VERIFICAÇÃO DE ERRO OCULTO DO DRIVE (Página HTML em vez do ficheiro)
+                const textCheck = new TextDecoder().decode(arrayBuffer.slice(0, 500)).toLowerCase();
+                if (textCheck.includes("<!doctype html>") || textCheck.includes("<html")) {
+                    throw new Error("O Google Drive bloqueou a transferência direta.\nIsto costuma acontecer quando o ficheiro é muito grande (acima de 100MB) e o Google exige a confirmação de aviso de antivírus.");
+                }
+
                 // 1. Detetar o formato baseado nos Magic Bytes
                 const format = detectFormat(arrayBuffer);
                 if (!format) {
@@ -294,7 +315,6 @@
                 let coverBase64 = null;
                 
                 if (format === 'pdf') {
-                    // Testa abrir no PDF.js e aproveita para gerar a capa
                     const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer.slice(0) });
                     const pdf = await loadingTask.promise;
                     const page = await pdf.getPage(1);
@@ -306,9 +326,7 @@
                     await page.render({ canvasContext: ctx, viewport: viewport }).promise;
                     coverBase64 = canvas.toDataURL('image/jpeg', 0.8);
                 } else if (format === 'docx') {
-                    // Testa abrir no Mammoth
                     await mammoth.convertToHtml({ arrayBuffer: arrayBuffer.slice(0) });
-                    // Se não atirou erro, é válido. DOCX não tem capa gerada nativamente.
                 }
 
                 // 3. Tudo válido. Guardar na Biblioteca.
