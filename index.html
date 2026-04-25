@@ -421,27 +421,39 @@
             try {
                 const arrayBuffer = await file.arrayBuffer();
                 
-                // Parse inicial rápido só para extrair metadados e capa
-                const tempBook = ePub(arrayBuffer);
-                await tempBook.ready;
-                
-                const meta = await tempBook.loaded.metadata;
+                let title = file.name.replace(/\.[^/.]+$/, ""); // Nome do arquivo sem extensão como fallback
+                let author = 'Autor Desconhecido';
                 let coverBase64 = null;
-                
+
+                // TENTATIVA 1: Extrair Metadados de forma segura (Modo Tolerante)
+                // Usamos uma cópia do arrayBuffer (slice) para garantir que a leitura inicial não corrompa o buffer principal
                 try {
-                    const coverUrl = await tempBook.coverUrl();
-                    if (coverUrl) {
-                        coverBase64 = await blobUrlToBase64(coverUrl);
+                    const tempBook = ePub(arrayBuffer.slice(0));
+                    await tempBook.ready;
+                    
+                    const meta = await tempBook.loaded.metadata;
+                    if (meta.title) title = meta.title;
+                    if (meta.creator) author = meta.creator;
+                    
+                    try {
+                        const coverUrl = await tempBook.coverUrl();
+                        if (coverUrl) {
+                            coverBase64 = await blobUrlToBase64(coverUrl);
+                        }
+                    } catch(e) {
+                        console.warn("Capa não encontrada ou erro ao extrair capa:", e);
                     }
-                } catch(e) {
-                    console.warn("Capa não encontrada ou erro ao extrair:", e);
+                    tempBook.destroy(); // Limpar memória
+                } catch (metaError) {
+                    console.warn("Aviso: Falha ao extrair metadados perfeitos. O EPUB pode ter sido criado manualmente ou ter estrutura fora do padrão. A guardar com o nome do ficheiro.", metaError);
+                    // O erro é apanhado aqui, não bloqueando o processo de guardar o ficheiro
                 }
 
                 const bookId = 'book_' + Date.now();
                 const bookRecord = {
                     id: bookId,
-                    title: meta.title || file.name.replace('.epub', ''),
-                    author: meta.creator || 'Autor Desconhecido',
+                    title: title,
+                    author: author,
                     cover: coverBase64,
                     addedAt: Date.now()
                 };
@@ -452,12 +464,10 @@
                 // Atualizar Metadata
                 appState.books.push(bookRecord);
                 await localforage.setItem(STORE_META, appState.books);
-                
-                tempBook.destroy(); // Limpar memória
 
             } catch (error) {
-                console.error("Erro ao processar EPUB:", error);
-                alert(`Erro ao processar ${file.name}. Pode estar corrompido ou com DRM.`);
+                console.error("Erro FATAL ao processar arquivo:", error);
+                alert(`Erro ao guardar o ficheiro ${file.name}.\n\nDetalhes do erro: ${error.message || error}`);
             }
         }
 
@@ -582,7 +592,7 @@
                 setupRenditionEvents();
                 
                 // Gerar Índice
-                generateTOC();
+                generateTOC().catch(e => console.warn("Erro ao gerar Índice:", e));
 
                 // Gerar Locations para a barra de progresso (em background)
                 readerState.book.ready.then(() => {
@@ -592,13 +602,13 @@
                 }).then((locations) => {
                     readerState.locationsGenerated = true;
                     updateProgress();
-                });
+                }).catch(e => console.warn("Erro ao calcular paginação:", e));
 
                 hideLoading();
 
             } catch (error) {
                 console.error(error);
-                alert("Erro ao abrir o livro.");
+                alert(`Erro ao tentar ler o livro.\n\nSe criou este ficheiro manualmente, ele pode não ser um formato EPUB 100% válido.\nErro Técnico: ${error.message || error}`);
                 hideLoading();
                 switchView('library');
             }
