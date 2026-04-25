@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Leitor de E-books (Kindle Web Clone)</title>
+    <title>Leitor de E-books (Google Drive Links)</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -28,53 +28,30 @@
     <!-- Fontes Customizadas -->
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
 
-    <!-- Dependências -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/epub.js/0.3.93/epub.min.js"></script>
+    <!-- Dependências do Leitor -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
-    <!-- PDF.js para suportar PDFs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <!-- Mammoth.js para suportar DOCX -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        body {
-            transition: background-color 0.3s ease, color 0.3s ease;
-            overflow: hidden; 
-            user-select: none; 
-        }
-        .view {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            display: flex; flex-direction: column; opacity: 0; pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
+        body { transition: background-color 0.3s ease, color 0.3s ease; overflow: hidden; user-select: none; }
+        .view { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
         .view.active { opacity: 1; pointer-events: auto; }
-
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(150, 150, 150, 0.3); border-radius: 10px; }
-
         .ui-bar { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease; will-change: transform; }
         .ui-hidden .top-bar { transform: translateY(-100%); opacity: 0; pointer-events: none; }
         .ui-hidden .bottom-bar { transform: translateY(100%); opacity: 0; pointer-events: none; }
         .ui-visible .top-bar { transform: translateY(0); opacity: 1; pointer-events: auto; }
         .ui-visible .bottom-bar { transform: translateY(0); opacity: 1; pointer-events: auto; }
-
         .book-cover-container { aspect-ratio: 2 / 3; background-color: #e5e7eb; position: relative; overflow: hidden; }
         .book-cover-container img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s ease; }
         .book-card:hover .book-cover-container img { transform: scale(1.05); }
-
         .modal-enter { opacity: 0; transform: scale(0.95); pointer-events: none; }
         .modal-enter-active { opacity: 1; transform: scale(1); pointer-events: auto; transition: all 0.2s ease; }
-        
-        #drop-zone { display: none; }
-        #drop-zone.active { display: flex; }
-
-        /* Estilos base para conteúdo DOCX e EPUB */
-        .reader-content-base {
-            transition: all 0.3s ease;
-        }
+        .reader-content-base { transition: all 0.3s ease; }
         #docx-content img { max-width: 100%; height: auto; margin: 10px 0; }
         #docx-content p { margin-bottom: 1em; line-height: 1.6; text-align: justify; }
         #docx-content h1, #docx-content h2 { font-weight: bold; margin-top: 1.5em; margin-bottom: 0.5em; }
@@ -85,13 +62,38 @@
     <!-- OVERLAYS -->
     <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-95 z-[100] flex flex-col items-center justify-center hidden">
         <i data-lucide="loader-2" class="w-12 h-12 animate-spin text-blue-600 mb-4"></i>
-        <p id="loading-text" class="text-lg font-medium text-gray-700">A processar...</p>
+        <p id="loading-text" class="text-lg font-medium text-gray-700 text-center px-4">A processar...</p>
     </div>
 
-    <div id="drop-zone" class="fixed inset-0 bg-blue-500 bg-opacity-90 z-[90] flex-col items-center justify-center text-white">
-        <i data-lucide="upload-cloud" class="w-24 h-24 mb-4"></i>
-        <h2 class="text-3xl font-bold">Largar ficheiro aqui</h2>
-        <p class="mt-2">Suporta DOCX, PDF e EPUB</p>
+    <!-- MODAL ADICIONAR LINK -->
+    <div id="add-link-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[90] hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="px-6 py-4 border-b dark:border-gray-800 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Adicionar via Google Drive</h3>
+                <button onclick="toggleAddModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Cole o link de partilha do Google Drive do seu PDF ou DOCX. Certifique-se de que o link está configurado para <strong>"Qualquer pessoa com o link"</strong>.
+                </p>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título do Livro</label>
+                        <input type="text" id="input-book-title" placeholder="Ex: O Senhor dos Anéis" class="w-full px-4 py-2 border dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Link do Google Drive</label>
+                        <input type="url" id="input-drive-link" placeholder="https://drive.google.com/file/d/..." class="w-full px-4 py-2 border dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white">
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t dark:border-gray-700 flex justify-end gap-3">
+                <button onclick="toggleAddModal()" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Cancelar</button>
+                <button onclick="processDriveLink()" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm">Baixar e Salvar</button>
+            </div>
+        </div>
     </div>
 
     <!-- TELA 1: BIBLIOTECA -->
@@ -99,50 +101,43 @@
         <header class="bg-white border-b sticky top-0 z-10 shadow-sm">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <i data-lucide="book-open" class="text-gray-800"></i>
+                    <i data-lucide="book-open" class="text-blue-600"></i>
                     <h1 class="text-xl font-semibold text-gray-800">Minha Biblioteca</h1>
                 </div>
                 <div>
-                    <!-- Atualizado para aceitar docx e pdf -->
-                    <input type="file" id="file-upload" class="hidden" accept=".epub,.pdf,.docx,.kpf,.kcb" multiple>
-                    <button onclick="document.getElementById('file-upload').click()" class="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors text-sm font-medium">
-                        <i data-lucide="plus" class="w-4 h-4"></i>
-                        Adicionar Documento
+                    <button onclick="toggleAddModal()" class="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors text-sm font-medium">
+                        <i data-lucide="link" class="w-4 h-4"></i>
+                        Adicionar Link Drive
                     </button>
                 </div>
             </div>
         </header>
 
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow">
+            <!-- Estado Vazio -->
             <div id="empty-state" class="hidden flex-col items-center justify-center h-64 text-gray-500">
                 <i data-lucide="library" class="w-16 h-16 mb-4 opacity-50"></i>
-                <p class="text-lg">Sua biblioteca está vazia.</p>
-                <p class="text-sm mt-1">Adicione PDFs, DOCX (Word) ou EPUBs.</p>
+                <p class="text-lg">A sua biblioteca está vazia.</p>
+                <p class="text-sm mt-1">Clique em "Adicionar Link Drive" para baixar um PDF ou DOCX.</p>
             </div>
-            <div id="books-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6"></div>
+            
+            <div id="books-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6"></div>
         </main>
     </div>
 
     <!-- TELA 2: LEITOR -->
     <div id="view-reader" class="view bg-theme-light text-black ui-hidden flex flex-col relative">
-        
-        <!-- Containers de Leitura -->
         <div class="flex-grow relative h-full w-full flex justify-center items-center overflow-hidden">
-            
-            <!-- EPUB VIEWER -->
-            <div id="viewer-epub" class="w-full h-full hidden"></div>
-            
             <!-- PDF VIEWER -->
             <div id="viewer-pdf-container" class="w-full h-full hidden overflow-auto bg-gray-200 dark:bg-gray-800 flex justify-center p-4">
                 <canvas id="viewer-pdf" class="shadow-xl bg-white max-w-full object-contain"></canvas>
             </div>
-
             <!-- DOCX VIEWER -->
             <div id="viewer-docx-container" class="w-full h-full hidden overflow-y-auto px-6 pt-16 pb-16 reader-content-base scroll-smooth">
                 <div id="docx-content" class="max-w-3xl mx-auto pb-12 text-lg"></div>
             </div>
             
-            <!-- Zonas de Clique (Apenas activas se format != DOCX ou sobrepostas dinamicamente) -->
+            <!-- Zonas de Clique (Para PDF e Menus) -->
             <div id="click-zones" class="absolute inset-0 z-10 flex pointer-events-none">
                 <div id="zone-left" class="w-1/3 h-full pointer-events-auto cursor-pointer" onclick="handleReaderClick('prev')"></div>
                 <div id="zone-center" class="w-1/3 h-full pointer-events-auto cursor-pointer" onclick="toggleReaderUI()"></div>
@@ -150,35 +145,20 @@
             </div>
         </div>
 
-        <!-- Interface UI -->
+        <!-- Interface UI do Leitor -->
         <div id="reader-ui" class="absolute inset-0 z-20 pointer-events-none flex flex-col justify-between overflow-hidden">
-            
-            <!-- Top Bar -->
             <div class="top-bar ui-bar bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 shadow-md flex items-center justify-between px-4 h-14 border-b dark:border-gray-800">
                 <button onclick="closeBook()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
                     <i data-lucide="arrow-left" class="w-6 h-6"></i>
                 </button>
                 <div class="flex items-center gap-2">
-                    <button onclick="toggleModal('modal-toc')" id="btn-toc" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors hidden" title="Índice">
-                        <i data-lucide="list" class="w-6 h-6"></i>
-                    </button>
                     <button onclick="toggleModal('modal-settings')" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors" title="Personalizar">
                         <span class="font-serif font-bold text-lg leading-none">Aa</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Modal Índice -->
-            <div id="modal-toc" class="absolute top-16 right-4 w-72 max-h-[70vh] bg-white dark:bg-gray-900 shadow-xl rounded-lg border dark:border-gray-800 overflow-y-auto modal-enter pointer-events-auto">
-                <div class="p-4 border-b dark:border-gray-800 sticky top-0 bg-white dark:bg-gray-900 z-10">
-                    <h3 class="font-semibold text-gray-800 dark:text-gray-200">Índice</h3>
-                </div>
-                <ul id="toc-list" class="p-2 text-sm text-gray-700 dark:text-gray-300"></ul>
-            </div>
-
-            <!-- Modal Configurações -->
             <div id="modal-settings" class="absolute top-16 right-4 w-80 bg-white dark:bg-gray-900 shadow-xl rounded-lg border dark:border-gray-800 p-5 modal-enter pointer-events-auto flex flex-col gap-6">
-                <!-- Temas -->
                 <div id="setting-theme">
                     <label class="block text-xs font-semibold text-gray-500 uppercase mb-3">Tema de Fundo</label>
                     <div class="grid grid-cols-4 gap-2">
@@ -189,8 +169,6 @@
                     </div>
                     <p id="pdf-theme-warn" class="text-[10px] text-gray-400 mt-2 hidden">* Temas alteram apenas o fundo no formato PDF.</p>
                 </div>
-
-                <!-- Fonte -->
                 <div id="setting-font">
                     <label class="block text-xs font-semibold text-gray-500 uppercase mb-3">Tipo de Letra</label>
                     <select id="font-family-select" onchange="applyFontFamily(this.value)" class="w-full bg-gray-50 dark:bg-gray-800 border dark:border-gray-700 text-gray-900 dark:text-white text-sm rounded focus:ring-blue-500 block p-2">
@@ -199,8 +177,6 @@
                         <option value="Arial, sans-serif">Arial</option>
                     </select>
                 </div>
-
-                <!-- Tamanho -->
                 <div id="setting-size">
                     <label class="block text-xs font-semibold text-gray-500 uppercase mb-3">Tamanho</label>
                     <div class="flex rounded-md shadow-sm">
@@ -210,7 +186,6 @@
                 </div>
             </div>
 
-            <!-- Bottom Bar -->
             <div class="bottom-bar ui-bar bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] h-12 flex flex-col items-center justify-center px-4 text-xs border-t dark:border-gray-800">
                 <div class="w-full max-w-md flex items-center gap-3">
                     <span id="progress-text">0%</span>
@@ -220,22 +195,16 @@
                 </div>
                 <span id="page-location" class="mt-1 text-[10px]">A preparar...</span>
             </div>
-            
         </div>
     </div>
 
     <script>
         lucide.createIcons();
 
-        // ---- CONFIGURAÇÃO DO WORKER DO PDF.JS (Evita erros de CORS) ----
+        // ---- CONFIGURAÇÃO DO WORKER DO PDF.JS ----
         const pdfjsLib = window['pdfjs-dist/build/pdf'];
         const pdfWorkerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        fetch(pdfWorkerSrc).then(res => res.blob()).then(blob => {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
-        }).catch(e => {
-            // Fallback direto caso o fetch falhe
-            pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
-        });
+        fetch(pdfWorkerSrc).then(res => res.blob()).then(blob => { pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob); }).catch(e => { pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerSrc; });
 
         // ---- ESTADO ----
         const STORE_META = 'kindle_books_meta';
@@ -252,9 +221,6 @@
             currentId: null,
             format: null,
             uiVisible: false,
-            // EPUB specific
-            book: null, rendition: null,
-            // PDF specific
             pdfDoc: null, pageNum: 1, pageRendering: false, pageNumPending: null,
         };
 
@@ -266,122 +232,117 @@
             localforage.config({ name: 'KindleWebApp', storeName: 'books' });
             await loadSettings();
             await loadLibrary();
-            setupDragAndDrop();
-            setupFileInput();
             setupKeyboard();
         });
 
-        // ---- GESTÃO DE FICHEIROS ----
-        function setupFileInput() {
-            document.getElementById('file-upload').addEventListener('change', async (e) => {
-                if (e.target.files.length > 0) await handleFiles(e.target.files);
-            });
+        // ---- LÓGICA DE DOWNLOAD VIA LINK GOOGLE DRIVE ----
+
+        function toggleAddModal() {
+            const modal = document.getElementById('add-link-modal');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.getElementById('input-book-title').value = '';
+                document.getElementById('input-drive-link').value = '';
+            }
         }
 
-        function setupDragAndDrop() {
-            const dropZone = document.getElementById('drop-zone');
-            window.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('active'); });
-            window.addEventListener('dragleave', (e) => { e.preventDefault(); if (e.clientX === 0) dropZone.classList.remove('active'); });
-            window.addEventListener('drop', async (e) => {
-                e.preventDefault(); dropZone.classList.remove('active');
-                if (e.dataTransfer.files.length > 0) await handleFiles(e.dataTransfer.files);
-            });
+        function extractDriveId(url) {
+            const match = url.match(/\/d\/(.+?)\//) || url.match(/id=(.+?)(&|$)/);
+            return match ? match[1] : null;
         }
 
-        async function handleFiles(files) {
-            showLoading("A processar ficheiro...");
-            
-            for (let file of files) {
-                const ext = file.name.split('.').pop().toLowerCase();
-                try {
-                    if (ext === 'pdf') {
-                        await processAndSavePdf(file);
-                    } else if (ext === 'docx') {
-                        await processAndSaveDocx(file);
-                    } else if (ext === 'epub') {
-                        await processAndSaveEpub(file);
-                    } else {
-                        alert(`O ficheiro ${file.name} não é suportado de momento. Use DOCX, PDF ou EPUB.`);
-                    }
-                } catch(e) {
-                    console.error("Erro a guardar:", e);
-                    alert(`Falha ao ler o ficheiro: ${file.name}`);
+        async function processDriveLink() {
+            const title = document.getElementById('input-book-title').value.trim() || 'Documento Importado';
+            const link = document.getElementById('input-drive-link').value.trim();
+
+            const fileId = extractDriveId(link);
+            if (!fileId) {
+                alert("Link inválido. Certifique-se que copiou o link de partilha do Google Drive.");
+                return;
+            }
+
+            toggleAddModal();
+            showLoading("A transferir do Google Drive...\nIsto pode demorar dependendo do tamanho.");
+
+            try {
+                // Endpoint nativo do Google para downloads de ficheiros públicos
+                const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+                // Proxy CORS gratuito para conseguir aceder à stream binária no navegador
+                const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(downloadUrl)}`;
+
+                const response = await fetch(proxyUrl);
+                
+                if (!response.ok) {
+                    throw new Error("Falha ao transferir. Certifique-se de que o link é 'Qualquer pessoa com o link'.");
                 }
+
+                const arrayBuffer = await response.arrayBuffer();
+                
+                // 1. Detetar o formato baseado nos Magic Bytes
+                const format = detectFormat(arrayBuffer);
+                if (!format) {
+                    throw new Error("Formato não reconhecido. Certifique-se que o link aponta para um PDF ou um ficheiro Word (DOCX).");
+                }
+
+                showLoading(`Formato ${format.toUpperCase()} detetado. A validar leitura...`);
+
+                // 2. VALIDAR SE FUNCIONA PARA LEITURA ANTES DE GUARDAR
+                let coverBase64 = null;
+                
+                if (format === 'pdf') {
+                    // Testa abrir no PDF.js e aproveita para gerar a capa
+                    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer.slice(0) });
+                    const pdf = await loadingTask.promise;
+                    const page = await pdf.getPage(1);
+                    const viewport = page.getViewport({ scale: 0.5 });
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                    coverBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                } else if (format === 'docx') {
+                    // Testa abrir no Mammoth
+                    await mammoth.convertToHtml({ arrayBuffer: arrayBuffer.slice(0) });
+                    // Se não atirou erro, é válido. DOCX não tem capa gerada nativamente.
+                }
+
+                // 3. Tudo válido. Guardar na Biblioteca.
+                showLoading("Validação concluída. A guardar na biblioteca...");
+                await saveBookRecord(arrayBuffer, title, coverBase64, format);
+                
+                await loadLibrary();
+                hideLoading();
+
+            } catch (error) {
+                console.error(error);
+                hideLoading();
+                alert(`Erro ao adicionar o livro:\n\n${error.message}`);
             }
-            await loadLibrary();
-            hideLoading();
         }
 
-        // Processar PDF
-        async function processAndSavePdf(file) {
-            const arrayBuffer = await file.arrayBuffer();
-            let title = file.name.replace(/\.[^/.]+$/, "");
-            let coverBase64 = null;
-
-            try {
-                const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-                const pdf = await loadingTask.promise;
-                const page = await pdf.getPage(1);
-                const viewport = page.getViewport({ scale: 0.5 });
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-                coverBase64 = canvas.toDataURL('image/jpeg', 0.8);
-            } catch(e) { console.warn("Aviso: Falha ao extrair capa PDF."); }
-
-            await saveBookRecord(arrayBuffer, title, "Documento PDF", coverBase64, 'pdf');
-        }
-
-        // Processar DOCX
-        async function processAndSaveDocx(file) {
-            const arrayBuffer = await file.arrayBuffer();
-            let title = file.name.replace(/\.[^/.]+$/, "");
-            // DOCX não tem capa standard fácil, vamos usar a default
-            await saveBookRecord(arrayBuffer, title, "Documento Word", null, 'docx');
-        }
-
-        // Processar EPUB (Com tolerância a falhas melhorada)
-        async function processAndSaveEpub(file) {
-            const arrayBuffer = await file.arrayBuffer();
-            let title = file.name.replace(/\.[^/.]+$/, ""); 
-            let author = 'Autor Desconhecido';
-            let coverBase64 = null;
-
-            try {
-                const tempBook = ePub(arrayBuffer.slice(0));
-                await tempBook.ready;
-                const meta = await tempBook.loaded.metadata;
-                if (meta.title) title = meta.title;
-                if (meta.creator) author = meta.creator;
-                try {
-                    const coverUrl = await tempBook.coverUrl();
-                    if (coverUrl) coverBase64 = await blobUrlToBase64(coverUrl);
-                } catch(e) { /* ignora erro de capa */ }
-                tempBook.destroy();
-            } catch (e) {
-                console.warn("Aviso: EPUB mal formatado. A tentar guardar à mesma.");
+        // Descobre se é PDF ou DOCX verificando a assinatura binária real do ficheiro descarregado
+        function detectFormat(buffer) {
+            const arr = new Uint8Array(buffer).subarray(0, 4);
+            let header = "";
+            for(let i = 0; i < arr.length; i++) {
+                header += arr[i].toString(16).padStart(2, '0');
             }
-            await saveBookRecord(arrayBuffer, title, author, coverBase64, 'epub');
+            if (header.startsWith("25504446")) return "pdf"; // %PDF
+            if (header.startsWith("504b")) return "docx"; // PK.. (ZIP header usado por docx)
+            return null;
         }
 
-        async function saveBookRecord(buffer, title, author, cover, format) {
+        async function saveBookRecord(buffer, title, cover, format) {
             const bookId = 'book_' + Date.now();
-            const bookRecord = { id: bookId, title: title, author: author, cover: cover, format: format, addedAt: Date.now() };
+            const bookRecord = { id: bookId, title: title, cover: cover, format: format, addedAt: Date.now() };
             await localforage.setItem(STORE_DATA_PREFIX + bookId, buffer);
             appState.books.push(bookRecord);
             await localforage.setItem(STORE_META, appState.books);
-        }
-
-        function blobUrlToBase64(blobUrl) {
-            return new Promise(async (resolve, reject) => {
-                const response = await fetch(blobUrl);
-                const blob = await response.blob();
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.readAsDataURL(blob);
-            });
         }
 
         // ---- BIBLIOTECA (UI) ----
@@ -395,8 +356,11 @@
 
             if (appState.books.length === 0) {
                 emptyState.classList.remove('hidden'); emptyState.classList.add('flex');
+                grid.classList.add('hidden');
             } else {
                 emptyState.classList.add('hidden'); emptyState.classList.remove('flex');
+                grid.classList.remove('hidden');
+                
                 const sortedBooks = [...appState.books].sort((a,b) => b.addedAt - a.addedAt);
 
                 sortedBooks.forEach(book => {
@@ -405,11 +369,11 @@
                     card.className = 'book-card cursor-pointer group flex flex-col h-full';
                     card.onclick = () => openBook(book.id);
                     
-                    const formatBadge = `<span class="absolute top-2 left-2 bg-gray-900 bg-opacity-70 text-white text-[10px] font-bold px-2 py-1 rounded shadow">${book.format.toUpperCase()}</span>`;
+                    const formatBadge = `<span class="absolute top-2 left-2 bg-gray-900 bg-opacity-70 text-white text-[10px] font-bold px-2 py-1 rounded shadow uppercase tracking-wide">${book.format}</span>`;
                     const coverContent = book.cover 
                         ? `<img src="${book.cover}" alt="Capa">`
                         : `<div class="w-full h-full flex flex-col items-center justify-center bg-gray-200 text-gray-500 p-4 text-center text-sm font-serif">
-                             <i data-lucide="${book.format==='pdf'?'file-text':book.format==='docx'?'file-type':'book'}" class="w-8 h-8 mb-2"></i>
+                             <i data-lucide="${book.format==='pdf'?'file-text':'file-type'}" class="w-8 h-8 mb-2"></i>
                              ${book.title}
                            </div>`;
 
@@ -423,7 +387,6 @@
                             <div class="absolute bottom-0 left-0 h-1 bg-blue-500" style="width: ${progress}%"></div>
                         </div>
                         <h3 class="font-semibold text-sm text-gray-800 line-clamp-2 leading-tight">${book.title}</h3>
-                        <p class="text-xs text-gray-500 mt-1 line-clamp-1">${book.author}</p>
                     `;
                     grid.appendChild(card);
                 });
@@ -432,7 +395,7 @@
         }
 
         async function deleteBook(id) {
-            if (confirm("Remover este documento?")) {
+            if (confirm("Remover este documento da biblioteca?")) {
                 appState.books = appState.books.filter(b => b.id !== id);
                 await localforage.setItem(STORE_META, appState.books);
                 await localforage.removeItem(STORE_DATA_PREFIX + id);
@@ -448,36 +411,30 @@
             try {
                 const bookMeta = appState.books.find(b => b.id === id);
                 const bookData = await localforage.getItem(STORE_DATA_PREFIX + id);
-                if (!bookData) throw new Error("Ficheiro não encontrado.");
+                if (!bookData) throw new Error("Ficheiro não encontrado na cache.");
 
                 switchView('reader');
                 readerState.currentId = id;
-                readerState.format = bookMeta.format || 'epub';
+                readerState.format = bookMeta.format;
                 
-                // Reset Viewers
-                document.getElementById('viewer-epub').classList.add('hidden');
                 document.getElementById('viewer-pdf-container').classList.add('hidden');
                 document.getElementById('viewer-docx-container').classList.add('hidden');
                 
-                // Configure UI per format
                 setupUIMenus(readerState.format);
                 
-                // Load specific renderer
-                if (readerState.format === 'epub') {
-                    await loadEpubReader(bookData);
-                } else if (readerState.format === 'pdf') {
+                if (readerState.format === 'pdf') {
                     await loadPdfReader(bookData);
                 } else if (readerState.format === 'docx') {
                     await loadDocxReader(bookData);
                 }
                 
-                readerState.uiVisible = true; toggleReaderUI(); // Mostrar barras ao entrar, e esconder
-                applySavedSettings(); // Aplicar temas Globais
+                readerState.uiVisible = true; toggleReaderUI(); // Piscar menus
+                applySavedSettings();
                 hideLoading();
 
             } catch (error) {
                 console.error(error);
-                alert("Erro ao tentar ler o ficheiro.");
+                alert("Erro crítico ao tentar abrir o documento.");
                 hideLoading(); switchView('library');
             }
         }
@@ -485,58 +442,17 @@
         function setupUIMenus(format) {
             const fontSetting = document.getElementById('setting-font');
             const sizeSetting = document.getElementById('setting-size');
-            const tocBtn = document.getElementById('btn-toc');
             const pdfWarn = document.getElementById('pdf-theme-warn');
 
             if (format === 'pdf') {
                 fontSetting.style.display = 'none';
                 sizeSetting.style.display = 'none';
-                tocBtn.classList.add('hidden');
                 pdfWarn.style.display = 'block';
             } else if (format === 'docx') {
                 fontSetting.style.display = 'block';
                 sizeSetting.style.display = 'block';
-                tocBtn.classList.add('hidden'); // DOCX simple parser sem TOC
-                pdfWarn.style.display = 'none';
-            } else {
-                fontSetting.style.display = 'block';
-                sizeSetting.style.display = 'block';
-                tocBtn.classList.remove('hidden');
                 pdfWarn.style.display = 'none';
             }
-        }
-
-        // ---- LEITOR EPUB ----
-        async function loadEpubReader(bookData) {
-            const viewer = document.getElementById('viewer-epub');
-            viewer.classList.remove('hidden');
-            viewer.innerHTML = '';
-            
-            readerState.book = ePub(bookData);
-            readerState.rendition = readerState.book.renderTo(viewer, {
-                width: "100%", height: "100%", spread: "none", flow: "paginated"
-            });
-
-            // Registrar temas nativos do EPUB
-            const themes = readerState.rendition.themes;
-            themes.register("light", { "body": { "background": "#ffffff", "color": "#000000" } });
-            themes.register("dark", { "body": { "background": "#121212", "color": "#e0e0e0" } });
-            themes.register("sepia", { "body": { "background": "#f4ecd8", "color": "#5b4636" } });
-            themes.register("green", { "body": { "background": "#323c3a", "color": "#d1d8d6" } });
-
-            const savedCfi = localStorage.getItem(`progress_${readerState.currentId}`);
-            await readerState.rendition.display(savedCfi || undefined);
-
-            readerState.rendition.on("relocated", loc => {
-                localStorage.setItem(`progress_${readerState.currentId}`, loc.start.cfi);
-                updateProgressEpub(loc);
-            });
-            readerState.rendition.on("click", handleReaderClickArea);
-
-            generateTOC();
-            readerState.book.locations.generate(1600).then(() => {
-                updateProgressEpub(readerState.rendition.currentLocation());
-            });
         }
 
         // ---- LEITOR PDF ----
@@ -560,7 +476,6 @@
                 const ctx = canvas.getContext('2d');
                 const container = document.getElementById('viewer-pdf-container');
                 
-                // Fit to width/height smoothly
                 const unscaledViewport = page.getViewport({ scale: 1 });
                 const scale = Math.min((container.clientWidth - 32) / unscaledViewport.width, (container.clientHeight - 32) / unscaledViewport.height);
                 const viewport = page.getViewport({ scale: scale });
@@ -568,15 +483,13 @@
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
 
-                const renderContext = { canvasContext: ctx, viewport: viewport };
-                page.render(renderContext).promise.then(() => {
+                page.render({ canvasContext: ctx, viewport: viewport }).promise.then(() => {
                     readerState.pageRendering = false;
                     if (readerState.pageNumPending !== null) {
                         renderPdfPage(readerState.pageNumPending);
                         readerState.pageNumPending = null;
                     }
                     
-                    // Save progress
                     localStorage.setItem(`progress_${readerState.currentId}`, num);
                     const pct = Math.round((num / readerState.pdfDoc.numPages) * 100);
                     localStorage.setItem(`progress_${readerState.currentId}_pct`, pct);
@@ -593,15 +506,13 @@
             const container = document.getElementById('viewer-docx-container');
             const contentDiv = document.getElementById('docx-content');
             container.classList.remove('hidden');
-            contentDiv.innerHTML = '<p class="text-center italic">A converter documento...</p>';
+            contentDiv.innerHTML = '<p class="text-center italic">A preparar leitura...</p>';
             
             try {
                 const result = await mammoth.convertToHtml({ arrayBuffer: bookData });
                 contentDiv.innerHTML = result.value;
                 
-                // Track scrolling to save progress
                 const savedScroll = localStorage.getItem(`progress_${readerState.currentId}`) || 0;
-                // Timeout needed to let browser render DOM first
                 setTimeout(() => { container.scrollTop = savedScroll; updateProgressDocx(); }, 100);
 
                 container.onscroll = () => {
@@ -609,13 +520,8 @@
                     updateProgressDocx();
                 };
 
-                // Removemos os handlers de click-zones puras e deixamos o utilizador fazer scroll natural no telemóvel/rato
                 document.getElementById('click-zones').style.display = 'none';
-                
-                // Mostrar menu com duplo clique para facilitar (já que removemos as zonas centrais)
-                container.onclick = (e) => {
-                    if(e.detail === 2) toggleReaderUI(); 
-                }
+                container.onclick = (e) => { if(e.detail === 2) toggleReaderUI(); }
 
             } catch (e) {
                 contentDiv.innerHTML = '<p class="text-red-500 text-center">Falha ao apresentar o conteúdo Word.</p>';
@@ -626,31 +532,18 @@
             const container = document.getElementById('viewer-docx-container');
             const totalScroll = container.scrollHeight - container.clientHeight;
             let pct = 0;
-            if (totalScroll > 0) {
-                pct = Math.round((container.scrollTop / totalScroll) * 100);
-            } else {
-                pct = 100;
-            }
+            if (totalScroll > 0) pct = Math.round((container.scrollTop / totalScroll) * 100);
+            else pct = 100;
+            
             localStorage.setItem(`progress_${readerState.currentId}_pct`, pct);
             document.getElementById('progress-text').innerText = `${pct}%`;
             document.getElementById('progress-bar-fill').style.width = `${pct}%`;
-            document.getElementById('page-location').innerText = `Leitura de ecrã fluida`;
+            document.getElementById('page-location').innerText = `Leitura contínua`;
         }
-
 
         // ---- CONTROLOS GENÉRICOS DE NAVEGAÇÃO ----
-        function handleReaderClickArea(e) {
-            const w = window.innerWidth; const x = e.clientX;
-            if (x < w * 0.3) handleReaderClick('prev');
-            else if (x > w * 0.7) handleReaderClick('next');
-            else toggleReaderUI();
-        }
-
         function handleReaderClick(action) {
-            if (readerState.format === 'epub' && readerState.rendition) {
-                if(action === 'prev') readerState.rendition.prev();
-                if(action === 'next') readerState.rendition.next();
-            } else if (readerState.format === 'pdf' && readerState.pdfDoc) {
+            if (readerState.format === 'pdf' && readerState.pdfDoc) {
                 if (action === 'prev' && readerState.pageNum <= 1) return;
                 if (action === 'next' && readerState.pageNum >= readerState.pdfDoc.numPages) return;
                 readerState.pageNum = action === 'prev' ? readerState.pageNum - 1 : readerState.pageNum + 1;
@@ -660,16 +553,10 @@
         }
 
         function closeBook() {
-            if (readerState.format === 'epub' && readerState.book) {
-                readerState.book.destroy();
-            }
-            readerState.book = null; readerState.rendition = null; readerState.pdfDoc = null;
+            readerState.pdfDoc = null;
             document.body.style.backgroundColor = '';
             document.body.style.color = '';
-            document.getElementById('modal-toc').classList.remove('modal-enter-active');
             document.getElementById('modal-settings').classList.remove('modal-enter-active');
-            
-            // Restore click zones if disabled by docx
             document.getElementById('click-zones').style.display = 'flex';
             
             switchView('library');
@@ -683,7 +570,6 @@
                 container.classList.remove('ui-hidden'); container.classList.add('ui-visible');
             } else {
                 container.classList.remove('ui-visible'); container.classList.add('ui-hidden');
-                document.getElementById('modal-toc').classList.remove('modal-enter-active');
                 document.getElementById('modal-settings').classList.remove('modal-enter-active');
             }
         }
@@ -691,9 +577,11 @@
         function toggleModal(id) {
             const modal = document.getElementById(id);
             const active = modal.classList.contains('modal-enter-active');
-            document.getElementById('modal-toc').classList.remove('modal-enter-active');
-            document.getElementById('modal-settings').classList.remove('modal-enter-active');
-            if (!active) modal.classList.add('modal-enter-active');
+            if (!active) {
+                modal.classList.add('modal-enter-active');
+            } else {
+                modal.classList.remove('modal-enter-active');
+            }
         }
 
         function setupKeyboard() {
@@ -702,33 +590,6 @@
                 if (e.key === 'ArrowLeft') handleReaderClick('prev');
                 if (e.key === 'ArrowRight') handleReaderClick('next');
             });
-        }
-
-        // Progresso EPUB
-        function updateProgressEpub(currentLocation) {
-            if (!currentLocation || !currentLocation.start || !readerState.book.locations.total) return;
-            const percentage = readerState.book.locations.percentageFromCfi(currentLocation.start.cfi);
-            const pct = Math.round(percentage * 100);
-            document.getElementById('progress-text').innerText = `${pct}%`;
-            document.getElementById('progress-bar-fill').style.width = `${pct}%`;
-            const loc = readerState.book.locations.locationFromCfi(currentLocation.start.cfi);
-            document.getElementById('page-location').innerText = `Posição ${loc} de ${readerState.book.locations.total}`;
-            localStorage.setItem(`progress_${readerState.currentId}_pct`, pct);
-        }
-
-        async function generateTOC() {
-            const list = document.getElementById('toc-list');
-            list.innerHTML = '';
-            const nav = await readerState.book.loaded.navigation;
-            if (nav && nav.length > 0) {
-                nav.forEach(item => {
-                    const li = document.createElement('li');
-                    li.className = 'py-2 border-b dark:border-gray-800 last:border-0 hover:text-blue-500 cursor-pointer';
-                    li.innerText = item.label.trim() || 'Sem Título';
-                    li.onclick = () => { readerState.rendition.display(item.href); toggleReaderUI(); };
-                    list.appendChild(li);
-                });
-            } else list.innerHTML = '<li class="py-2 text-gray-500 italic">Índice não disponível</li>';
         }
 
         // ---- DEFINIÇÕES E TEMAS (Aa) ----
@@ -740,7 +601,7 @@
 
         function applySavedSettings() {
             applyTheme(appState.settings.theme, false);
-            if(readerState.format !== 'pdf') {
+            if(readerState.format === 'docx') {
                 applyFontFamily(appState.settings.fontFamily, false);
                 applyFontSize(appState.settings.fontSize, false);
                 document.getElementById('font-family-select').value = appState.settings.fontFamily;
@@ -751,18 +612,12 @@
             appState.settings.theme = themeName;
             if (save) saveSettingsLocally();
             
-            // Fundo principal
             document.body.style.backgroundColor = themeBackgrounds[themeName];
             document.body.style.color = themeTextColors[themeName];
             
             if (themeName === 'dark' || themeName === 'green') document.documentElement.classList.add('dark');
             else document.documentElement.classList.remove('dark');
 
-            // EPUB
-            if (readerState.format === 'epub' && readerState.rendition) {
-                readerState.rendition.themes.select(themeName);
-            }
-            // DOCX
             if (readerState.format === 'docx') {
                 const docxContainer = document.getElementById('viewer-docx-container');
                 docxContainer.style.backgroundColor = themeBackgrounds[themeName];
@@ -778,9 +633,7 @@
         function applyFontSize(percent, save = true) {
             appState.settings.fontSize = percent;
             if (save) saveSettingsLocally();
-            if (readerState.format === 'epub' && readerState.rendition) {
-                readerState.rendition.themes.fontSize(percent + "%");
-            } else if (readerState.format === 'docx') {
+            if (readerState.format === 'docx') {
                 document.getElementById('viewer-docx-container').style.fontSize = (16 * (percent / 100)) + 'px';
             }
         }
@@ -788,22 +641,25 @@
         function applyFontFamily(font, save = true) {
             appState.settings.fontFamily = font;
             if (save) saveSettingsLocally();
-            if (readerState.format === 'epub' && readerState.rendition) {
-                readerState.rendition.themes.font(font);
-            } else if (readerState.format === 'docx') {
+            if (readerState.format === 'docx') {
                 document.getElementById('viewer-docx-container').style.fontFamily = font;
             }
         }
 
-        // Utilitários
         function switchView(view) {
             appState.view = view;
             document.getElementById('view-library').classList.remove('active');
             document.getElementById('view-reader').classList.remove('active');
             document.getElementById('view-' + view).classList.add('active');
         }
-        function showLoading(text) { document.getElementById('loading-text').innerText = text; document.getElementById('loading-overlay').classList.remove('hidden'); }
-        function hideLoading() { document.getElementById('loading-overlay').classList.add('hidden'); }
+        
+        function showLoading(text) { 
+            document.getElementById('loading-text').innerText = text; 
+            document.getElementById('loading-overlay').classList.remove('hidden'); 
+        }
+        function hideLoading() { 
+            document.getElementById('loading-overlay').classList.add('hidden'); 
+        }
 
     </script>
 </body>
