@@ -36,8 +36,11 @@
 
     <style>
         body { transition: background-color 0.3s ease, color 0.3s ease; overflow: hidden; user-select: none; }
-        .view { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
-        .view.active { opacity: 1; pointer-events: auto; }
+        
+        /* CORREÇÃO AQUI: Usar visibility e z-index para garantir que as views não roubam cliques umas das outras */
+        .view { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; flex-direction: column; opacity: 0; visibility: hidden; pointer-events: none; z-index: 0; transition: opacity 0.3s ease, visibility 0s linear 0.3s; }
+        .view.active { opacity: 1; visibility: visible; pointer-events: auto; z-index: 10; transition: opacity 0.3s ease, visibility 0s linear 0s; }
+        
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(150, 150, 150, 0.3); border-radius: 10px; }
@@ -117,10 +120,11 @@
             </div>
             
             <!-- Zonas de Clique (Para PDF e Menus) -->
-            <div id="click-zones" class="absolute inset-0 z-10 flex pointer-events-none">
-                <div id="zone-left" class="w-1/3 h-full pointer-events-auto cursor-pointer" onclick="handleReaderClick('prev')"></div>
-                <div id="zone-center" class="w-1/3 h-full pointer-events-auto cursor-pointer" onclick="toggleReaderUI()"></div>
-                <div id="zone-right" class="w-1/3 h-full pointer-events-auto cursor-pointer" onclick="handleReaderClick('next')"></div>
+            <!-- CORREÇÃO AQUI: Removido pointer-events-auto que roubava os cliques da biblioteca -->
+            <div id="click-zones" class="absolute inset-0 z-10 flex">
+                <div id="zone-left" class="w-1/3 h-full cursor-pointer" onclick="handleReaderClick('prev')"></div>
+                <div id="zone-center" class="w-1/3 h-full cursor-pointer" onclick="toggleReaderUI()"></div>
+                <div id="zone-right" class="w-1/3 h-full cursor-pointer" onclick="handleReaderClick('next')"></div>
             </div>
         </div>
 
@@ -183,13 +187,10 @@
         // ==========================================
         // CONFIGURAÇÃO DO GITHUB (DADOS DO AUTOR)
         // ==========================================
-        // IMPORTANTE: Altere "SeuUsuario" e "SeuRepositorio" pelos seus dados do GitHub.
-        // O repositório no GitHub TEM de estar definido como Público.
         const GITHUB_USERNAME = "gvconecta2025"; 
         const GITHUB_REPO = "mykindle";
-        const GITHUB_BRANCH = "main"; // A sua branch (geralmente "main" ou "master")
+        const GITHUB_BRANCH = "main"; 
         
-        // Catálogo de livros hospedados na raiz do repositório
         const CATALOGO_OFICIAL = [
             {
                 arquivo: "LIVRO FIEL A JESUS OU ESCRAVO DA TRADIÇÃO.docx",
@@ -235,32 +236,23 @@
         // DOWNLOAD AUTOMÁTICO DO GITHUB
         // ==========================================
         async function sincronizarDoGitHub() {
-            // Verifica se as credenciais do GitHub já foram alteradas
-            if (GITHUB_USERNAME === "SeuUsuario" || GITHUB_REPO === "SeuRepositorio") {
-                alert("Para o download funcionar, precisa de editar o código e colocar o seu GITHUB_USERNAME e GITHUB_REPO na secção de configuração (Javascript).");
-                return;
-            }
-
             for (let livro of CATALOGO_OFICIAL) {
-                // Verifica se já temos o livro na estante
                 const jaExiste = appState.books.find(b => b.title === livro.titulo);
                 if (jaExiste) {
-                    alert(`O livro "${livro.titulo}" já se encontra na sua biblioteca!`);
+                    alert(`O livro "${livro.titulo}" já se encontra na sua biblioteca! Pode abri-lo.`);
                     continue;
                 }
 
                 showLoading(`A transferir "${livro.titulo}" do GitHub...`);
                 
                 try {
-                    // O encodeURIComponent garante que espaços e acentos no nome do ficheiro (como Ç e Ã)
-                    // sejam traduzidos para o formato URL correto (ex: %20, %C3%87)
                     const arquivoCodificado = encodeURIComponent(livro.arquivo);
                     const urlGithubRaw = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/${GITHUB_BRANCH}/${arquivoCodificado}`;
                     
                     const response = await fetch(urlGithubRaw);
                     
                     if (!response.ok) {
-                        throw new Error(`Ficheiro não encontrado.\nVerifique se o ficheiro "${livro.arquivo}" está exatamente na raiz do repositório "${GITHUB_REPO}" na branch "${GITHUB_BRANCH}".`);
+                        throw new Error(`Ficheiro não encontrado.\nVerifique se o ficheiro "${livro.arquivo}" está exatamente na raiz do repositório "${GITHUB_REPO}".`);
                     }
 
                     const arrayBuffer = await response.arrayBuffer();
@@ -291,7 +283,7 @@
                 hideLoading();
                 alert(`Erro ao carregar ficheiro local:\n\n${error.message}`);
             }
-            inputElement.value = ''; // Limpar input
+            inputElement.value = ''; 
         }
 
         // ==========================================
@@ -329,15 +321,14 @@
             hideLoading();
         }
 
-        // Descobre se é PDF ou DOCX verificando a assinatura binária real do ficheiro
         function detectFormat(buffer) {
             const arr = new Uint8Array(buffer).subarray(0, 4);
             let header = "";
             for(let i = 0; i < arr.length; i++) {
                 header += arr[i].toString(16).padStart(2, '0');
             }
-            if (header.startsWith("25504446")) return "pdf"; // %PDF
-            if (header.startsWith("504b")) return "docx"; // PK.. (ZIP header usado por docx)
+            if (header.startsWith("25504446")) return "pdf"; 
+            if (header.startsWith("504b")) return "docx"; 
             return null;
         }
 
@@ -562,6 +553,11 @@
             document.body.style.color = '';
             document.getElementById('modal-settings').classList.remove('modal-enter-active');
             document.getElementById('click-zones').style.display = 'flex';
+            
+            // CORREÇÃO AQUI: Forçar a UI do leitor a esconder para não bloquear a biblioteca
+            readerState.uiVisible = false;
+            document.getElementById('view-reader').classList.remove('ui-visible');
+            document.getElementById('view-reader').classList.add('ui-hidden');
             
             switchView('library');
             loadLibrary();
