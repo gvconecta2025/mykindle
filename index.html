@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Leitor de E-books (Google Drive Links)</title>
+    <title>Leitor de E-books (GitHub Hosted)</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -59,41 +59,10 @@
 </head>
 <body class="bg-gray-50 text-gray-900 font-sans antialiased">
 
-    <!-- OVERLAYS -->
+    <!-- OVERLAYS DE CARREGAMENTO -->
     <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-95 z-[100] flex flex-col items-center justify-center hidden">
         <i data-lucide="loader-2" class="w-12 h-12 animate-spin text-blue-600 mb-4"></i>
         <p id="loading-text" class="text-lg font-medium text-gray-700 text-center px-4">A processar...</p>
-    </div>
-
-    <!-- MODAL ADICIONAR LINK -->
-    <div id="add-link-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[90] hidden items-center justify-center p-4">
-        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
-            <div class="px-6 py-4 border-b dark:border-gray-800 flex justify-between items-center">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Adicionar via Google Drive</h3>
-                <button onclick="toggleAddModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <div class="p-6">
-                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    Cole o link de partilha do Google Drive do seu PDF ou DOCX. Certifique-se de que o link está configurado para <strong>"Qualquer pessoa com o link"</strong>.
-                </p>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título do Livro</label>
-                        <input type="text" id="input-book-title" placeholder="Ex: O Senhor dos Anéis" class="w-full px-4 py-2 border dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Link do Google Drive</label>
-                        <input type="url" id="input-drive-link" placeholder="https://drive.google.com/file/d/..." class="w-full px-4 py-2 border dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white">
-                    </div>
-                </div>
-            </div>
-            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t dark:border-gray-700 flex justify-end gap-3">
-                <button onclick="toggleAddModal()" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Cancelar</button>
-                <button onclick="processDriveLink()" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm">Transferir e Guardar</button>
-            </div>
-        </div>
     </div>
 
     <!-- TELA 1: BIBLIOTECA -->
@@ -104,10 +73,16 @@
                     <i data-lucide="book-open" class="text-blue-600"></i>
                     <h1 class="text-xl font-semibold text-gray-800">A Minha Biblioteca</h1>
                 </div>
-                <div>
-                    <button onclick="toggleAddModal()" class="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors text-sm font-medium">
-                        <i data-lucide="link" class="w-4 h-4"></i>
-                        Adicionar Link Drive
+                <div class="flex items-center gap-3">
+                    <!-- Opção de carregar ficheiro local, mantida como plano B -->
+                    <input type="file" id="local-file-upload" class="hidden" accept=".pdf,.docx" onchange="processLocalFile(this)">
+                    <button onclick="document.getElementById('local-file-upload').click()" class="text-gray-500 hover:text-gray-800 transition-colors hidden sm:flex" title="Adicionar ficheiro local">
+                        <i data-lucide="upload" class="w-5 h-5"></i>
+                    </button>
+                    <!-- Botão Principal de Sincronização com GitHub -->
+                    <button onclick="sincronizarDoGitHub()" class="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors text-sm font-medium">
+                        <i data-lucide="github" class="w-4 h-4"></i>
+                        Baixar Livro Oficial
                     </button>
                 </div>
             </div>
@@ -118,7 +93,11 @@
             <div id="empty-state" class="hidden flex-col items-center justify-center h-64 text-gray-500">
                 <i data-lucide="library" class="w-16 h-16 mb-4 opacity-50"></i>
                 <p class="text-lg">A sua biblioteca está vazia.</p>
-                <p class="text-sm mt-1">Clique em "Adicionar Link Drive" para transferir um PDF ou DOCX.</p>
+                <p class="text-sm mt-1 text-center max-w-sm">Clique no botão acima para transferir o seu livro oficial diretamente do repositório.</p>
+                <button onclick="sincronizarDoGitHub()" class="mt-6 flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-md">
+                    <i data-lucide="download-cloud" class="w-5 h-5"></i>
+                    Transferir "LIVRO FIEL A JESUS..."
+                </button>
             </div>
             
             <div id="books-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6"></div>
@@ -201,6 +180,23 @@
     <script>
         lucide.createIcons();
 
+        // ==========================================
+        // CONFIGURAÇÃO DO GITHUB (DADOS DO AUTOR)
+        // ==========================================
+        // IMPORTANTE: Altere "SeuUsuario" e "SeuRepositorio" pelos seus dados do GitHub.
+        // O repositório no GitHub TEM de estar definido como Público.
+        const GITHUB_USERNAME = "SeuUsuario"; 
+        const GITHUB_REPO = "SeuRepositorio";
+        const GITHUB_BRANCH = "main"; // A sua branch (geralmente "main" ou "master")
+        
+        // Catálogo de livros hospedados na raiz do repositório
+        const CATALOGO_OFICIAL = [
+            {
+                arquivo: "LIVRO FIEL A JESUS OU ESCRAVO DA TRADIÇÃO.docx",
+                titulo: "Fiel a Jesus ou Escravo da Tradição"
+            }
+        ];
+
         // ---- CONFIGURAÇÃO DO WORKER DO PDF.JS ----
         const pdfjsLib = window['pdfjs-dist/build/pdf'];
         const pdfWorkerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -235,115 +231,105 @@
             setupKeyboard();
         });
 
-        // ---- LÓGICA DE DOWNLOAD VIA LINK GOOGLE DRIVE ----
-
-        function toggleAddModal() {
-            const modal = document.getElementById('add-link-modal');
-            if (modal.classList.contains('hidden')) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            } else {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-                document.getElementById('input-book-title').value = '';
-                document.getElementById('input-drive-link').value = '';
-            }
-        }
-
-        function extractDriveId(url) {
-            const match = url.match(/\/d\/(.+?)\//) || url.match(/id=(.+?)(&|$)/);
-            return match ? match[1] : null;
-        }
-
-        async function processDriveLink() {
-            const title = document.getElementById('input-book-title').value.trim() || 'Documento Importado';
-            const link = document.getElementById('input-drive-link').value.trim();
-
-            const fileId = extractDriveId(link);
-            if (!fileId) {
-                alert("Link inválido. Certifique-se que copiou o link de partilha do Google Drive.");
+        // ==========================================
+        // DOWNLOAD AUTOMÁTICO DO GITHUB
+        // ==========================================
+        async function sincronizarDoGitHub() {
+            // Verifica se as credenciais do GitHub já foram alteradas
+            if (GITHUB_USERNAME === "SeuUsuario" || GITHUB_REPO === "SeuRepositorio") {
+                alert("Para o download funcionar, precisa de editar o código e colocar o seu GITHUB_USERNAME e GITHUB_REPO na secção de configuração (Javascript).");
                 return;
             }
 
-            toggleAddModal();
-            showLoading("A transferir do Google Drive...\nIsto pode demorar dependendo do tamanho.");
+            for (let livro of CATALOGO_OFICIAL) {
+                // Verifica se já temos o livro na estante
+                const jaExiste = appState.books.find(b => b.title === livro.titulo);
+                if (jaExiste) {
+                    alert(`O livro "${livro.titulo}" já se encontra na sua biblioteca!`);
+                    continue;
+                }
 
-            try {
-                // Link oficial de download do Drive
-                const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+                showLoading(`A transferir "${livro.titulo}" do GitHub...`);
                 
-                // Sistema de Proxies Alternativos (Fallback)
-                const proxies = [
-                    `https://api.allorigins.win/raw?url=`,
-                    `https://corsproxy.io/?url=`
-                ];
-
-                let response = null;
-                for (const proxy of proxies) {
-                    try {
-                        const res = await fetch(proxy + encodeURIComponent(downloadUrl));
-                        if (res.ok) {
-                            response = res;
-                            break; // Funciona, parar de procurar!
-                        }
-                    } catch (e) {
-                        console.warn("Proxy falhou, a tentar o próximo...", proxy);
+                try {
+                    // O encodeURIComponent garante que espaços e acentos no nome do ficheiro (como Ç e Ã)
+                    // sejam traduzidos para o formato URL correto (ex: %20, %C3%87)
+                    const arquivoCodificado = encodeURIComponent(livro.arquivo);
+                    const urlGithubRaw = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/${GITHUB_BRANCH}/${arquivoCodificado}`;
+                    
+                    const response = await fetch(urlGithubRaw);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Ficheiro não encontrado.\nVerifique se o ficheiro "${livro.arquivo}" está exatamente na raiz do repositório "${GITHUB_REPO}" na branch "${GITHUB_BRANCH}".`);
                     }
+
+                    const arrayBuffer = await response.arrayBuffer();
+                    await processArrayBufferAndSave(arrayBuffer, livro.titulo);
+                    
+                } catch (error) {
+                    console.error(error);
+                    hideLoading();
+                    alert(`Erro de Sincronização:\n\n${error.message}`);
                 }
-
-                if (!response || !response.ok) {
-                    throw new Error("Não foi possível transferir. Os servidores proxy falharam ou o ficheiro não está público.");
-                }
-
-                const arrayBuffer = await response.arrayBuffer();
-                
-                // VERIFICAÇÃO DE ERRO OCULTO DO DRIVE (Página HTML em vez do ficheiro)
-                const textCheck = new TextDecoder().decode(arrayBuffer.slice(0, 500)).toLowerCase();
-                if (textCheck.includes("<!doctype html>") || textCheck.includes("<html")) {
-                    throw new Error("O Google Drive bloqueou a transferência direta.\nIsto costuma acontecer quando o ficheiro é muito grande (acima de 100MB) e o Google exige a confirmação de aviso de antivírus.");
-                }
-
-                // 1. Detetar o formato baseado nos Magic Bytes
-                const format = detectFormat(arrayBuffer);
-                if (!format) {
-                    throw new Error("Formato não reconhecido. Certifique-se que o link aponta para um PDF ou um ficheiro Word (DOCX).");
-                }
-
-                showLoading(`Formato ${format.toUpperCase()} detetado. A validar leitura...`);
-
-                // 2. VALIDAR SE FUNCIONA PARA LEITURA ANTES DE GUARDAR
-                let coverBase64 = null;
-                
-                if (format === 'pdf') {
-                    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer.slice(0) });
-                    const pdf = await loadingTask.promise;
-                    const page = await pdf.getPage(1);
-                    const viewport = page.getViewport({ scale: 0.5 });
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-                    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-                    coverBase64 = canvas.toDataURL('image/jpeg', 0.8);
-                } else if (format === 'docx') {
-                    await mammoth.convertToHtml({ arrayBuffer: arrayBuffer.slice(0) });
-                }
-
-                // 3. Tudo válido. Guardar na Biblioteca.
-                showLoading("Validação concluída. A guardar na biblioteca...");
-                await saveBookRecord(arrayBuffer, title, coverBase64, format);
-                
-                await loadLibrary();
-                hideLoading();
-
-            } catch (error) {
-                console.error(error);
-                hideLoading();
-                alert(`Erro ao adicionar o livro:\n\n${error.message}`);
             }
         }
 
-        // Descobre se é PDF ou DOCX verificando a assinatura binária real do ficheiro descarregado
+        // ==========================================
+        // UPLOAD LOCAL (MANTIDO COMO BACKUP)
+        // ==========================================
+        async function processLocalFile(inputElement) {
+            if (!inputElement.files || inputElement.files.length === 0) return;
+            const file = inputElement.files[0];
+            const finalTitle = file.name.replace(/\.[^/.]+$/, "");
+            
+            showLoading("A carregar ficheiro local...");
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                await processArrayBufferAndSave(arrayBuffer, finalTitle);
+            } catch (error) {
+                console.error(error);
+                hideLoading();
+                alert(`Erro ao carregar ficheiro local:\n\n${error.message}`);
+            }
+            inputElement.value = ''; // Limpar input
+        }
+
+        // ==========================================
+        // LÓGICA CENTRAL DE GUARDA E VALIDAÇÃO
+        // ==========================================
+        async function processArrayBufferAndSave(arrayBuffer, title) {
+            const format = detectFormat(arrayBuffer);
+            if (!format) {
+                throw new Error("Formato não reconhecido. O ficheiro hospedado não é um PDF nem DOCX válido.");
+            }
+
+            showLoading(`A processar leitura do livro...`);
+
+            let coverBase64 = null;
+            
+            if (format === 'pdf') {
+                const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer.slice(0) });
+                const pdf = await loadingTask.promise;
+                const page = await pdf.getPage(1);
+                const viewport = page.getViewport({ scale: 0.5 });
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                coverBase64 = canvas.toDataURL('image/jpeg', 0.8);
+            } else if (format === 'docx') {
+                await mammoth.convertToHtml({ arrayBuffer: arrayBuffer.slice(0) });
+            }
+
+            showLoading("A guardar na sua estante virtual...");
+            await saveBookRecord(arrayBuffer, title, coverBase64, format);
+            
+            await loadLibrary();
+            hideLoading();
+        }
+
+        // Descobre se é PDF ou DOCX verificando a assinatura binária real do ficheiro
         function detectFormat(buffer) {
             const arr = new Uint8Array(buffer).subarray(0, 4);
             let header = "";
