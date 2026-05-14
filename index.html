@@ -14,6 +14,7 @@
 </head>
 <body>
 
+    <!-- TELA DE LOGIN -->
     <div id="login-screen" class="login-container">
         <div class="login-card">
             <div class="login-icon">🏔️</div>
@@ -26,6 +27,18 @@
         </div>
     </div>
 
+    <!-- === NOVO: PAYWALL (TRAVA DE ACESSO) === -->
+    <div id="paywall-screen" class="modal-overlay hidden" style="z-index: 2500; background-color: rgba(15, 23, 42, 0.4);">
+        <div class="modal-content" style="text-align: center; padding: 40px; align-items: center;">
+            <div class="login-icon" style="color: #f59e0b; margin-bottom: 8px;">🔒</div>
+            <h2 style="color: white; margin-bottom: 12px; font-size: 1.8rem;">Acesso Exclusivo</h2>
+            <p style="color: #94a3b8; margin-bottom: 32px; font-size: 1rem; line-height: 1.5;">O App Fractal é uma ferramenta fechada para alunos. Garanta sua vaga para desbloquear o sistema de produtividade.</p>
+            <a href="#" target="_blank" class="btn-salvar" style="display: block; text-decoration: none; width: 100%; text-align: center; font-size: 1.1rem; padding: 14px;">Desbloquear Acesso Agora</a>
+            <button id="btn-paywall-logout" class="btn-fechar-painel" style="margin-top: 16px; width: 100%; border: none;">Sair da Conta</button>
+        </div>
+    </div>
+
+    <!-- DASHBOARD PRINCIPAL -->
     <div id="app-dashboard" class="dashboard-container hidden">
         <nav class="sidebar-icones">
             <div class="menu-superior">
@@ -95,7 +108,7 @@
             </div>
         </aside>
 
-        <!-- PAINEL DIREITO 1: A Trincheira (Visível por padrão) -->
+        <!-- PAINEL DIREITO 1: A Trincheira -->
         <main id="painel-trincheira" class="trincheira-panel">
             <div class="header-trincheira">
                 <h1 id="data-hoje">HOJE</h1>
@@ -149,7 +162,7 @@
             </div>
         </main>
 
-        <!-- PAINEL DIREITO 2: O Canvas de Planejamento (Oculto por padrão) -->
+        <!-- PAINEL DIREITO 2: O Canvas de Planejamento -->
         <section id="painel-planejamento" class="planejamento-panel hidden">
             <div class="header-planejamento">
                 <div>
