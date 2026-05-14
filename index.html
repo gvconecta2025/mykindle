@@ -1,4 +1,33 @@
-<div class="grid-temperaturas">
+<!-- Container Principal usando CSS Grid (Agora com 3 colunas) -->
+    <div class="dashboard-container">
+        
+        <!-- NOVO: MENU LATERAL ESQUERDO (Ícones) -->
+        <nav class="sidebar-icones">
+            <div class="menu-superior">
+                <div class="icone logo">≡</div>
+                <div class="icone ativo" title="Bússola">🧭</div>
+                <div class="icone" title="Comunidade">👥</div>
+                <div class="icone" title="Metas">🎯</div>
+            </div>
+            
+            <div class="menu-inferior">
+                <!-- Botão de Sincronização -->
+                <div class="icone" id="btn-sync" title="Verificar Atualizações">🔄</div>
+                <div class="icone" title="Configurações">⚙️</div>
+                <div class="icone" title="Sair">🚪</div>
+            </div>
+        </nav>
+
+        <!-- PAINEL ESQUERDO: A Bússola -->
+        <aside class="bussola-panel">
+            <h2>NORTE DE LONGO PRAZO</h2>
+            <p style="color: #64748b; font-size: 0.9rem; margin-top: 10px;">Árvore de metas entrará aqui...</p>
+        </aside>
+
+        <!-- PAINEL DIREITO: A Trincheira -->
+        <main class="trincheira-panel">
+            <h1 style="margin-bottom: 24px;">HOJE: QUARTA-FEIRA</h1>
+            <div class="grid-temperaturas">
                 <!-- Coluna Principal (Tempo A) -->
                 <div class="coluna-a">
                     <div class="card">
@@ -40,3 +69,7 @@
                     </div>
                 </div>
             </div>
+        </main>
+
+    </div>
+    <script src="app.js"></script>
