@@ -14,7 +14,6 @@
 </head>
 <body>
 
-    <!-- TELA DE LOGIN -->
     <div id="login-screen" class="login-container">
         <div class="login-card">
             <div class="login-icon">🏔️</div>
@@ -27,7 +26,7 @@
         </div>
     </div>
 
-    <!-- === NOVO: PAYWALL (TRAVA DE ACESSO) === -->
+    <!-- PAYWALL (TRAVA DE ACESSO) -->
     <div id="paywall-screen" class="modal-overlay hidden" style="z-index: 2500; background-color: rgba(15, 23, 42, 0.4);">
         <div class="modal-content" style="text-align: center; padding: 40px; align-items: center;">
             <div class="login-icon" style="color: #f59e0b; margin-bottom: 8px;">🔒</div>
@@ -38,14 +37,14 @@
         </div>
     </div>
 
-    <!-- DASHBOARD PRINCIPAL -->
     <div id="app-dashboard" class="dashboard-container hidden">
+        <!-- MENU LATERAL COM NAVEGAÇÃO -->
         <nav class="sidebar-icones">
             <div class="menu-superior">
                 <div class="icone logo" title="Menu">≡</div>
-                <div class="icone ativo" title="Bússola">🧭</div>
+                <div class="icone ativo" id="nav-bussola" title="Trincheira & Bússola">🧭</div>
+                <div class="icone" id="nav-vitorias" title="Cofre de Vitórias">🏆</div>
                 <div class="icone" title="Comunidade">👥</div>
-                <div class="icone" title="Metas">🎯</div>
             </div>
             <div class="menu-inferior">
                 <img id="user-avatar" src="" alt="Perfil" class="avatar-img" title="Seu Perfil">
@@ -112,7 +111,7 @@
         <main id="painel-trincheira" class="trincheira-panel">
             <div class="header-trincheira">
                 <h1 id="data-hoje">HOJE</h1>
-                <button id="btn-varrer" class="btn-varrer" title="Limpar tarefas marcadas">🧹 Varrer Concluídas</button>
+                <button id="btn-varrer" class="btn-varrer" title="Arquivar tarefas marcadas">🧹 Varrer Concluídas</button>
             </div>
 
             <div class="grid-temperaturas">
@@ -172,17 +171,30 @@
                 </div>
                 <button id="btn-fechar-planejamento" class="btn-fechar-painel" title="Voltar para a Trincheira">✕ Voltar ao Hoje</button>
             </div>
-            
             <div class="body-planejamento">
                 <label>Objetivo Principal (Título da Meta):</label>
                 <input type="text" id="plan-input-meta" class="input-grande" placeholder="Escreva a meta principal com clareza...">
-                
                 <label style="margin-top: 24px;">Anotações, Estratégias e Recursos:</label>
                 <textarea id="plan-input-notas" class="textarea-gigante" placeholder="Despeje aqui suas ideias, mapeamento, links importantes e tudo que você precisa para alcançar este nível..."></textarea>
-                
                 <div class="alerta-desdobramento">
                     <strong>Próximo passo estratégico:</strong> 
                     <span id="plan-dica-filho">Dica de desdobramento.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAINEL DIREITO 3: O Cofre de Vitórias -->
+        <section id="painel-vitorias" class="planejamento-panel hidden">
+            <div class="header-planejamento">
+                <div>
+                    <span class="badge" style="background-color: #f59e0b;">ARQUIVO</span>
+                    <h1 style="color: #f8fafc; font-size: 2rem; margin: 8px 0;">Cofre de Vitórias</h1>
+                    <p class="contexto-pai">O registro imutável da sua disciplina diária.</p>
+                </div>
+            </div>
+            <div class="body-planejamento">
+                <div id="lista-vitorias" class="historico-container">
+                    <!-- As vitórias arquivadas entrarão aqui via JS -->
                 </div>
             </div>
         </section>
