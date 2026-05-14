@@ -14,6 +14,7 @@
 </head>
 <body>
 
+    <!-- TELA DE LOGIN -->
     <div id="login-screen" class="login-container">
         <div class="login-card">
             <div class="login-icon">🏔️</div>
@@ -26,6 +27,7 @@
         </div>
     </div>
 
+    <!-- DASHBOARD PRINCIPAL -->
     <div id="app-dashboard" class="dashboard-container hidden">
         <nav class="sidebar-icones">
             <div class="menu-superior">
@@ -41,62 +43,63 @@
             </div>
         </nav>
 
+        <!-- PAINEL ESQUERDO: A Bússola (Agora clicável para abrir o planejamento) -->
         <aside class="bussola-panel">
             <h2 style="margin-bottom: 24px; font-size: 1.2rem; letter-spacing: 1px;">NORTE DE LONGO PRAZO</h2>
             <div class="arvore-metas">
-                <div class="meta-item nivel-1">
+                <div class="meta-item nivel-1" data-nivel="0">
                     <div class="meta-icone">🏔️</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">5 ANOS</span>
-                        <span class="meta-titulo" contenteditable="true" spellcheck="false">Carregando...</span>
+                        <span class="meta-titulo">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 30%;"></div></div>
                     </div>
                 </div>
-                <div class="meta-item nivel-2">
+                <div class="meta-item nivel-2" data-nivel="1">
                     <div class="meta-icone">🎯</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">1 ANO</span>
-                        <span class="meta-titulo" contenteditable="true" spellcheck="false">Carregando...</span>
+                        <span class="meta-titulo">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 55%;"></div></div>
                     </div>
                 </div>
-                <div class="meta-item nivel-3">
+                <div class="meta-item nivel-3" data-nivel="2">
                     <div class="meta-icone">🌗</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">6 MESES</span>
-                        <span class="meta-titulo" contenteditable="true" spellcheck="false">Carregando...</span>
+                        <span class="meta-titulo">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 45%;"></div></div>
                     </div>
                 </div>
-                <div class="meta-item nivel-4">
+                <div class="meta-item nivel-4" data-nivel="3">
                     <div class="meta-icone">🌘</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">3 MESES</span>
-                        <span class="meta-titulo" contenteditable="true" spellcheck="false">Carregando...</span>
+                        <span class="meta-titulo">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 20%;"></div></div>
                     </div>
                 </div>
-                <div class="meta-item nivel-5">
+                <div class="meta-item nivel-5" data-nivel="4">
                     <div class="meta-icone">📅</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">1 MÊS</span>
-                        <span class="meta-titulo" contenteditable="true" spellcheck="false">Carregando...</span>
+                        <span class="meta-titulo">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 60%;"></div></div>
                     </div>
                 </div>
-                <div class="meta-item nivel-6 meta-ativa">
+                <div class="meta-item nivel-6 meta-ativa" data-nivel="5">
                     <div class="meta-icone">📌</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">ESTA SEMANA</span>
-                        <span class="meta-titulo" contenteditable="true" spellcheck="false">Carregando...</span>
+                        <span class="meta-titulo">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill destaque-fill" style="width: 0%;"></div></div>
                     </div>
                 </div>
             </div>
         </aside>
 
+        <!-- PAINEL DIREITO: A Trincheira -->
         <main class="trincheira-panel">
-            <!-- CABEÇALHO ATUALIZADO: Título Dinâmico + Botão de Limpeza -->
             <div class="header-trincheira">
                 <h1 id="data-hoje">HOJE</h1>
                 <button id="btn-varrer" class="btn-varrer" title="Limpar tarefas marcadas">🧹 Varrer Concluídas</button>
@@ -148,6 +151,32 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- === NOVO: MODAL "SALA DE GUERRA" DE PLANEJAMENTO === -->
+    <div id="modal-planejamento" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button id="btn-fechar-modal" class="btn-fechar">×</button>
+            
+            <div class="modal-header">
+                <span id="modal-badge-periodo" class="badge">PERÍODO</span>
+                <p id="modal-contexto-pai" class="contexto-pai">Alimenta: [Meta Superior]</p>
+            </div>
+            
+            <div class="modal-body">
+                <label>Defina o objetivo principal desta etapa:</label>
+                <textarea id="modal-input-meta" class="input-grande" rows="3" placeholder="Escreva sua meta com clareza..."></textarea>
+                
+                <div class="alerta-desdobramento">
+                    <strong>Próximo passo estratégico:</strong> 
+                    <span id="modal-dica-filho">Para bater esta meta, você precisará desdobrá-la no nível inferior.</span>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button id="btn-salvar-planejamento" class="btn-salvar">Confirmar e Salvar</button>
+            </div>
+        </div>
     </div>
 
     <script type="module" src="app.js"></script>
