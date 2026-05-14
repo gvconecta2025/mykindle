@@ -13,7 +13,7 @@ body {
     overflow: hidden; 
 }
 
-/* O Layout de Três Colunas (Menu, Bússola, Trincheira) */
+/* O Layout de Três Colunas */
 .dashboard-container {
     display: grid;
     grid-template-columns: 70px 420px 1fr; 
@@ -22,7 +22,7 @@ body {
     padding: 24px 24px 24px 0;
 }
 
-/* Estilo do Menu Lateral */
+/* Menu Lateral */
 .sidebar-icones {
     display: flex;
     flex-direction: column;
@@ -53,24 +53,11 @@ body {
     border-radius: 12px;
 }
 
-.icone:hover {
-    opacity: 1;
-    background-color: rgba(255, 255, 255, 0.1);
-}
+.icone:hover { opacity: 1; background-color: rgba(255, 255, 255, 0.1); }
+.icone.ativo { opacity: 1; background-color: #3b82f6; color: white; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+.icone.logo { opacity: 1; margin-bottom: 20px; }
 
-.icone.ativo {
-    opacity: 1;
-    background-color: #3b82f6; 
-    color: white;
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); 
-}
-
-.icone.logo {
-    opacity: 1;
-    margin-bottom: 20px;
-}
-
-/* ESTILO MODERNO DOS PAINÉIS (Sombras e Bordas) */
+/* Painéis */
 .bussola-panel, .trincheira-panel {
     background-color: #1e293b;
     border-radius: 16px; 
@@ -83,33 +70,15 @@ body {
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.1); 
 }
 
-.bussola-panel {
-    padding: 28px; 
-    overflow-y: auto; 
-}
+.bussola-panel { padding: 28px; overflow-y: auto; }
+.trincheira-panel { padding: 32px; overflow-y: auto; }
 
-/* Scrollbar Customizada (Fina e escura) */
-.bussola-panel::-webkit-scrollbar, .trincheira-panel::-webkit-scrollbar {
-    width: 6px;
-}
-.bussola-panel::-webkit-scrollbar-thumb, .trincheira-panel::-webkit-scrollbar-thumb {
-    background-color: #334155;
-    border-radius: 10px;
-}
+.bussola-panel::-webkit-scrollbar, .trincheira-panel::-webkit-scrollbar { width: 6px; }
+.bussola-panel::-webkit-scrollbar-thumb, .trincheira-panel::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 10px; }
 
-.trincheira-panel {
-    padding: 32px;
-    overflow-y: auto;
-}
+.grid-temperaturas { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 
-/* Layout Interno da Trincheira */
-.grid-temperaturas {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-}
-
-/* --- ESTILOS DOS CARDS DA TRINCHEIRA --- */
+/* Cards da Trincheira */
 .card {
     background-color: #283548; 
     border-radius: 14px; 
@@ -121,45 +90,19 @@ body {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.card:hover {
-    transform: translateY(-3px); 
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
-}
-
-.mb-20 {
-    margin-bottom: 24px; 
-}
-
-.card-header {
-    padding: 16px 20px;
-    color: white;
-}
-
-.card-header h3 {
-    font-size: 1.1rem;
-    margin-bottom: 4px;
-    letter-spacing: 0.5px;
-    font-weight: 600;
-}
-
-.subtitulo {
-    font-size: 0.75rem;
-    opacity: 0.9;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
+.card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4); }
+.mb-20 { margin-bottom: 24px; }
+.card-header { padding: 16px 20px; color: white; }
+.card-header h3 { font-size: 1.1rem; margin-bottom: 4px; letter-spacing: 0.5px; font-weight: 600; }
+.subtitulo { font-size: 0.75rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px; }
 
 .bg-vermelho { background-color: #ef4444; }
 .bg-laranja { background-color: #f97316; }
 .bg-azul { background-color: #3b82f6; }
 
-/* Corpo e Lista de Tarefas */
-.card-body {
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px; 
-}
+/* Lista de Tarefas */
+.card-body { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.task-list { display: flex; flex-direction: column; gap: 8px; }
 
 .task-item {
     display: flex;
@@ -174,115 +117,58 @@ body {
     color: #cbd5e1;
 }
 
-.task-item:hover {
-    background-color: #334155; 
-    border: 1px solid rgba(255, 255, 255, 0.1); 
-}
+.task-item:hover { background-color: #334155; border: 1px solid rgba(255, 255, 255, 0.1); }
+.task-item input[type="checkbox"] { margin-right: 14px; width: 20px; height: 20px; accent-color: #ef4444; cursor: pointer; transition: transform 0.1s ease; }
+.task-item input[type="checkbox"]:hover { transform: scale(1.1); }
 
-.task-item input[type="checkbox"] {
-    margin-right: 14px;
-    width: 20px;
-    height: 20px;
-    accent-color: #ef4444; 
-    cursor: pointer;
-    transition: transform 0.1s ease;
-}
-
-.task-item input[type="checkbox"]:hover {
-    transform: scale(1.1); 
-}
-
-/* --- ESTILOS DA ÁRVORE FRACTAL (BÚSSOLA) --- */
-.arvore-metas {
+/* Novos Inputs para Adicionar Tarefa */
+.add-task-form {
     display: flex;
-    flex-direction: column;
-    gap: 16px;
-    position: relative;
+    gap: 8px;
+    margin-top: 8px;
 }
 
-.arvore-metas::before {
-    content: '';
-    position: absolute;
-    top: 20px;
-    bottom: 40px;
-    left: 18px; 
-    width: 2px;
-    background-color: rgba(255, 255, 255, 0.05);
-    z-index: 0;
-}
-
-.meta-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    position: relative;
-    z-index: 1;
-    padding: 8px 0;
-}
-
-.nivel-2 { margin-left: 20px; }
-.nivel-3 { margin-left: 40px; }
-.nivel-4 { margin-left: 60px; }
-.nivel-5 { margin-left: 80px; }
-.nivel-6 { margin-left: 100px; }
-
-.meta-ativa {
-    background-color: rgba(59, 130, 246, 0.1);
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    border-radius: 12px;
-    padding: 12px;
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
-    margin-top: 8px; 
-}
-
-.meta-icone {
-    font-size: 1.2rem;
-    background-color: #1e293b; 
-    padding: 4px;
-    border-radius: 50%;
-}
-
-.meta-conteudo {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
-.meta-periodo {
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    color: #94a3b8;
-}
-
-.meta-ativa .meta-periodo {
-    color: #60a5fa; 
-}
-
-.meta-titulo {
-    font-size: 0.95rem;
+.input-tarefa {
+    flex: 1;
+    background-color: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px 14px;
     color: #f8fafc;
-    margin-bottom: 8px;
-    margin-top: 2px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border 0.2s ease;
 }
 
-/* Barras de Progresso */
-.progress-track {
-    width: 100%;
-    height: 6px;
-    background-color: #334155;
-    border-radius: 4px;
-    overflow: hidden;
+.input-tarefa::placeholder { color: #64748b; }
+.input-tarefa:focus { border-color: #60a5fa; }
+
+.btn-add {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    width: 42px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
 }
 
-.progress-fill {
-    height: 100%;
-    background-color: #a855f7; 
-    border-radius: 4px;
-    transition: width 0.5s ease-in-out;
-}
+.btn-add:hover { background-color: rgba(255, 255, 255, 0.2); }
 
-.destaque-fill {
-    background-color: #3b82f6; 
-    box-shadow: 0 0 8px rgba(59, 130, 246, 0.8); 
-}
+/* Árvore Fractal */
+.arvore-metas { display: flex; flex-direction: column; gap: 16px; position: relative; }
+.arvore-metas::before { content: ''; position: absolute; top: 20px; bottom: 40px; left: 18px; width: 2px; background-color: rgba(255, 255, 255, 0.05); z-index: 0; }
+.meta-item { display: flex; align-items: flex-start; gap: 16px; position: relative; z-index: 1; padding: 8px 0; }
+.nivel-2 { margin-left: 20px; } .nivel-3 { margin-left: 40px; } .nivel-4 { margin-left: 60px; } .nivel-5 { margin-left: 80px; } .nivel-6 { margin-left: 100px; }
+
+.meta-ativa { background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 12px; box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); margin-top: 8px; }
+.meta-icone { font-size: 1.2rem; background-color: #1e293b; padding: 4px; border-radius: 50%; }
+.meta-conteudo { display: flex; flex-direction: column; width: 100%; }
+.meta-periodo { font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; color: #94a3b8; }
+.meta-ativa .meta-periodo { color: #60a5fa; }
+.meta-titulo { font-size: 0.95rem; color: #f8fafc; margin-bottom: 8px; margin-top: 2px; }
+
+.progress-track { width: 100%; height: 6px; background-color: #334155; border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; background-color: #a855f7; border-radius: 4px; transition: width 0.5s ease-in-out; }
+.destaque-fill { background-color: #3b82f6; box-shadow: 0 0 8px rgba(59, 130, 246, 0.8); }
