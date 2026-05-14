@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>App Fractal - O Norte e a Trincheira</title>
     
-    <!-- CONEXÃO PWA: Identidade Visual -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -16,7 +15,7 @@
 <body>
 
     <div class="dashboard-container">
-        <!-- MENU LATERAL ESQUERDO -->
+        <!-- MENU LATERAL (Ou Inferior no Mobile) -->
         <nav class="sidebar-icones">
             <div class="menu-superior">
                 <div class="icone logo" title="Menu">≡</div>
@@ -90,6 +89,7 @@
         <main class="trincheira-panel">
             <h1 style="margin-bottom: 24px;">HOJE: QUARTA-FEIRA</h1>
             <div class="grid-temperaturas">
+                <!-- Coluna Principal (Tempo A) -->
                 <div class="coluna-a">
                     <div class="card">
                         <div class="card-header bg-vermelho">
@@ -98,9 +98,18 @@
                         </div>
                         <div class="card-body">
                             <div class="task-list">
-                                <label class="task-item"><input type="checkbox" checked> Gravar Vídeo B-roll Cap 4</label>
-                                <label class="task-item"><input type="checkbox" checked> Revisar Pág 15-20</label>
-                                <label class="task-item"><input type="checkbox"> Revisar Pág 13-13</label>
+                                <label class="task-item">
+                                    <div class="task-content">
+                                        <input type="checkbox" checked> <span class="task-text">Gravar Vídeo B-roll Cap 4</span>
+                                    </div>
+                                    <button class="btn-delete" title="Excluir">×</button>
+                                </label>
+                                <label class="task-item">
+                                    <div class="task-content">
+                                        <input type="checkbox" checked> <span class="task-text">Revisar Pág 15-20</span>
+                                    </div>
+                                    <button class="btn-delete" title="Excluir">×</button>
+                                </label>
                             </div>
                             <div class="add-task-form">
                                 <input type="text" placeholder="Adicionar foco total..." class="input-tarefa">
@@ -109,6 +118,8 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Coluna Secundária (Tempo B e C) -->
                 <div class="coluna-bc">
                     <div class="card mb-20">
                         <div class="card-header bg-laranja">
@@ -117,7 +128,12 @@
                         </div>
                         <div class="card-body">
                             <div class="task-list">
-                                <label class="task-item"><input type="checkbox"> Responder E-mails urgentes</label>
+                                <label class="task-item">
+                                    <div class="task-content">
+                                        <input type="checkbox"> <span class="task-text">Responder E-mails urgentes</span>
+                                    </div>
+                                    <button class="btn-delete" title="Excluir">×</button>
+                                </label>
                             </div>
                             <div class="add-task-form">
                                 <input type="text" placeholder="Adicionar manutenção..." class="input-tarefa">
@@ -125,6 +141,7 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="card">
                         <div class="card-header bg-azul">
                             <h3>TEMPO C - FRIO</h3>
@@ -132,7 +149,12 @@
                         </div>
                         <div class="card-body">
                             <div class="task-list">
-                                <label class="task-item"><input type="checkbox"> Pesquisar referências visuais</label>
+                                <label class="task-item">
+                                    <div class="task-content">
+                                        <input type="checkbox"> <span class="task-text">Pesquisar referências visuais</span>
+                                    </div>
+                                    <button class="btn-delete" title="Excluir">×</button>
+                                </label>
                             </div>
                             <div class="add-task-form">
                                 <input type="text" placeholder="Adicionar opcional..." class="input-tarefa">
