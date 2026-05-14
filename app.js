@@ -15,10 +15,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-let usuarioLogado = null;
-let acessoPermitido = false; // NOVA TRAVA DE SEGURANÇA
 
+let usuarioLogado = null;
+let acessoPermitido = false; 
 let notasGlobaisBussola = ["", "", "", "", "", ""];
+let historicoVitoriasGlobais = []; // NOVO: Armazena as tarefas concluídas varridas
 
 // =========================================================
 // 1. O RELÓGIO E AUTENTICAÇÃO
@@ -62,10 +63,25 @@ document.getElementById('btn-logout').addEventListener('click', () => signOut(au
 document.getElementById('btn-paywall-logout').addEventListener('click', () => signOut(auth));
 
 // =========================================================
-// 2. BANCO DE DADOS (Firestore) & SISTEMA DE ACESSO
+// 2. BANCO DE DADOS (Firestore)
 // =========================================================
+function verificarAcessoVisual(temAcesso) {
+    if (temAcesso) {
+        acessoPermitido = true;
+        paywallScreen.classList.add('hidden');
+        appDashboard.style.filter = "none";
+        appDashboard.style.pointerEvents = "auto";
+    } else {
+        acessoPermitido = false;
+        paywallScreen.classList.remove('hidden');
+        appDashboard.style.filter = "blur(10px)";
+        appDashboard.style.pointerEvents = "none";
+        appDashboard.style.userSelect = "none";
+    }
+}
+
 async function salvarNaNuvem() {
-    if (!usuarioLogado || !acessoPermitido) return; // Não salva se estiver bloqueado
+    if (!usuarioLogado || !acessoPermitido) return;
     const titulosBussola = document.querySelectorAll('.meta-titulo');
     const dadosBussola = [];
     titulosBussola.forEach(titulo => dadosBussola.push(titulo.textContent.trim()));
@@ -87,25 +103,10 @@ async function salvarNaNuvem() {
             bussola: dadosBussola,
             bussolaNotas: notasGlobaisBussola,
             trincheira: dadosTrincheira,
+            historico: historicoVitoriasGlobais, // Envia o histórico para a nuvem
             ultimaAtualizacao: new Date().toISOString()
         }, { merge: true });
     } catch (e) { console.error("Erro Nuvem: ", e); }
-}
-
-// Função de Controle (Paywall)
-function verificarAcessoVisual(temAcesso) {
-    if (temAcesso) {
-        acessoPermitido = true;
-        paywallScreen.classList.add('hidden');
-        appDashboard.style.filter = "none";
-        appDashboard.style.pointerEvents = "auto";
-    } else {
-        acessoPermitido = false;
-        paywallScreen.classList.remove('hidden');
-        appDashboard.style.filter = "blur(10px)";
-        appDashboard.style.pointerEvents = "none";
-        appDashboard.style.userSelect = "none";
-    }
 }
 
 async function puxarDadosDaNuvem() {
@@ -115,8 +116,6 @@ async function puxarDadosDaNuvem() {
         
         if (docSnap.exists()) {
             const dados = docSnap.data();
-
-            // MÓDULO DE SEGURANÇA E PAGAMENTO
             verificarAcessoVisual(dados.acessoLiberado === true);
 
             if (dados.bussola) {
@@ -124,9 +123,9 @@ async function puxarDadosDaNuvem() {
                     if (dados.bussola[index]) titulo.textContent = dados.bussola[index];
                 });
             }
-            if (dados.bussolaNotas) {
-                notasGlobaisBussola = dados.bussolaNotas;
-            }
+            if (dados.bussolaNotas) notasGlobaisBussola = dados.bussolaNotas;
+            if (dados.historico) historicoVitoriasGlobais = dados.historico; // Recupera vitórias
+
             if (dados.trincheira) {
                 document.querySelectorAll('.task-list').forEach((lista, index) => {
                     if (dados.trincheira[index]) {
@@ -149,48 +148,61 @@ async function puxarDadosDaNuvem() {
                 });
             }
         } else {
-            // Conta nova: Sem acesso por padrão
             verificarAcessoVisual(false);
-            
             document.querySelectorAll('.meta-titulo').forEach((t, i) => {
                 if(i===0) t.textContent = "Sua grande visão em 5 anos...";
                 else t.textContent = "Defina sua meta...";
             });
-            
-            // Grava a estrutura básica travada
             await setDoc(doc(db, "usuarios", usuarioLogado.uid), {
-                acessoLiberado: false,
-                emailOrigem: usuarioLogado.email,
-                dataCriacao: new Date().toISOString()
+                acessoLiberado: false, emailOrigem: usuarioLogado.email, dataCriacao: new Date().toISOString()
             });
         }
-        
         atualizarProgressoTrincheira();
-        
     } catch (e) { console.error("Erro puxar dados: ", e); }
 }
 
 // =========================================================
-// 3. CANVAS DE PLANEJAMENTO
+// 3. NAVEGAÇÃO E PAINÉIS (Trincheira vs Planejamento vs Vitórias)
 // =========================================================
 const painelTrincheira = document.getElementById('painel-trincheira');
 const painelPlanejamento = document.getElementById('painel-planejamento');
-const btnFecharPlanejamento = document.getElementById('btn-fechar-planejamento');
+const painelVitorias = document.getElementById('painel-vitorias');
+const navBussola = document.getElementById('nav-bussola');
+const navVitorias = document.getElementById('nav-vitorias');
+
+// Navegação do Menu Esquerdo
+navBussola.addEventListener('click', () => {
+    document.querySelectorAll('.icone').forEach(i => i.classList.remove('ativo'));
+    navBussola.classList.add('ativo');
+    painelPlanejamento.classList.add('hidden');
+    painelVitorias.classList.add('hidden');
+    painelTrincheira.classList.remove('hidden');
+});
+
+navVitorias.addEventListener('click', () => {
+    document.querySelectorAll('.icone').forEach(i => i.classList.remove('ativo'));
+    navVitorias.classList.add('ativo');
+    painelTrincheira.classList.add('hidden');
+    painelPlanejamento.classList.add('hidden');
+    painelVitorias.classList.remove('hidden');
+    renderizarHistorico(); // Carrega as vitórias na tela
+});
+
+// Modal de Planejamento (Sala de Guerra)
 const planBadge = document.getElementById('plan-badge-periodo');
 const planContextoPai = document.getElementById('plan-contexto-pai');
 const planInputMeta = document.getElementById('plan-input-meta');
 const planInputNotas = document.getElementById('plan-input-notas');
 const planDicaFilho = document.getElementById('plan-dica-filho');
-
 let nivelAtualEditando = -1; 
 
 const fractalMapeamento = [
-    { periodo: "5 ANOS", pai: "Este é o seu Norte Estelar Supremo. O ápice da montanha.", filho: "Você desdobrará isso em 5 metas anuais consistentes." },
-    { periodo: "1 ANO", pai: "A Meta de 5 Anos", filho: "Para bater este ano, você o dividirá em 2 Grandes Semestres (6 meses)." },
-    { periodo: "6 MESES", pai: "A Meta de 1 Ano", filho: "Metade do percurso. O próximo passo é focar no Trimestre (3 meses)." },
-    { periodo: "3 MESES", pai: "A Meta Semestral (6 Meses)", filho: "Quase lá. Vamos reduzir o foco para metas mensais táticas." },
-    { periodo: "1 MÊS", pai: "O Fechamento do Trimestre (3 Meses)", filho: "Isso se transformará nas 4 batalhas semanais ativas." },
-    { periodo: "ESTA SEMANA", pai: "O Objetivo do Mês", filho: "Você vai fatiar esta meta em tarefas diárias na sua Trincheira." }
+    { periodo: "5 ANOS", pai: "Este é o seu Norte Estelar Supremo.", filho: "Você desdobrará isso em 5 metas anuais consistentes." },
+    { periodo: "1 ANO", pai: "A Meta de 5 Anos", filho: "Divida em 2 Grandes Semestres (6 meses)." },
+    { periodo: "6 MESES", pai: "A Meta de 1 Ano", filho: "Próximo passo: focar no Trimestre (3 meses)." },
+    { periodo: "3 MESES", pai: "A Meta Semestral (6 Meses)", filho: "Reduza o foco para metas mensais táticas." },
+    { periodo: "1 MÊS", pai: "O Fechamento do Trimestre", filho: "Isso se transformará nas 4 batalhas semanais." },
+    { periodo: "ESTA SEMANA", pai: "O Objetivo do Mês", filho: "Fatie esta meta em tarefas diárias na Trincheira." }
 ];
 
 document.querySelectorAll('.meta-item').forEach(item => {
@@ -204,8 +216,7 @@ document.querySelectorAll('.meta-item').forEach(item => {
         const tituloAtual = item.querySelector('.meta-titulo').textContent;
         let textoPaiReal = configFase.pai;
         if (nivelAtualEditando > 0) {
-            const paineis = document.querySelectorAll('.meta-titulo');
-            textoPaiReal = `Alimenta: "${paineis[nivelAtualEditando - 1].textContent}"`;
+            textoPaiReal = `Alimenta: "${document.querySelectorAll('.meta-titulo')[nivelAtualEditando - 1].textContent}"`;
         }
         
         planBadge.textContent = `PLANEJAMENTO: ${configFase.periodo}`;
@@ -215,29 +226,26 @@ document.querySelectorAll('.meta-item').forEach(item => {
         planDicaFilho.textContent = configFase.filho;
         
         painelTrincheira.classList.add('hidden');
+        painelVitorias.classList.add('hidden');
         painelPlanejamento.classList.remove('hidden');
     });
 });
 
-function fecharPlanejamento() {
+document.getElementById('btn-fechar-planejamento').addEventListener('click', () => {
     if (nivelAtualEditando > -1) {
         const novoTexto = planInputMeta.value.trim();
-        if (novoTexto !== "") {
-            const paineis = document.querySelectorAll('.meta-item');
-            paineis[nivelAtualEditando].querySelector('.meta-titulo').textContent = novoTexto;
-        }
+        if (novoTexto !== "") document.querySelectorAll('.meta-item')[nivelAtualEditando].querySelector('.meta-titulo').textContent = novoTexto;
         notasGlobaisBussola[nivelAtualEditando] = planInputNotas.value;
         salvarNaNuvem();
     }
     document.querySelectorAll('.meta-item').forEach(i => i.classList.remove('selecionado'));
     painelPlanejamento.classList.add('hidden');
-    painelTrincheira.classList.remove('hidden');
-    nivelAtualEditando = -1;
-}
-btnFecharPlanejamento.addEventListener('click', fecharPlanejamento);
+    navBussola.click(); // Volta ativando a aba da Trincheira
+});
+
 
 // =========================================================
-// 4. MOTOR DA TRINCHEIRA
+// 4. MOTOR DA TRINCHEIRA & ARQUIVAMENTO (VARREDURA)
 // =========================================================
 const barraSemana = document.querySelector('.destaque-fill');
 
@@ -264,16 +272,60 @@ function atualizarProgressoTrincheira() {
     salvarNaNuvem();
 }
 
+// ARQUIVAMENTO: O botão varrer agora manda pro Histórico
 const btnVarrer = document.getElementById('btn-varrer');
 if (btnVarrer) {
     btnVarrer.addEventListener('click', () => {
         let limpouAlgo = false;
+        
+        // Pega a data atual formatada (Ex: 14/05/2026 - 15:30)
+        const dataAtual = new Date();
+        const dataFormatada = `${dataAtual.getDate().toString().padStart(2, '0')}/${(dataAtual.getMonth()+1).toString().padStart(2, '0')}/${dataAtual.getFullYear()} às ${dataAtual.getHours().toString().padStart(2, '0')}:${dataAtual.getMinutes().toString().padStart(2, '0')}`;
+
         document.querySelectorAll('.task-item input[type="checkbox"]').forEach(box => {
-            if (box.checked) { box.closest('.task-item').remove(); limpouAlgo = true; }
+            if (box.checked) { 
+                const textoTarefa = box.closest('.task-item').querySelector('.task-text').textContent;
+                
+                // Salva no banco de vitórias
+                historicoVitoriasGlobais.push({
+                    texto: textoTarefa,
+                    dataStr: dataFormatada
+                });
+
+                // Remove da Trincheira
+                box.closest('.task-item').remove(); 
+                limpouAlgo = true; 
+            }
         });
+        
         if(limpouAlgo) atualizarProgressoTrincheira(); 
     });
 }
+
+// Renderiza o Histórico na Tela de Vitórias
+function renderizarHistorico() {
+    const listaHtml = document.getElementById('lista-vitorias');
+    listaHtml.innerHTML = '';
+
+    if (historicoVitoriasGlobais.length === 0) {
+        listaHtml.innerHTML = '<p class="vazio-msg">Seu cofre está vazio. Conclua e varra tarefas na Trincheira para preenchê-lo.</p>';
+        return;
+    }
+
+    // Cria os itens invertidos (Os mais novos no topo)
+    const historicoReverso = [...historicoVitoriasGlobais].reverse();
+    
+    historicoReverso.forEach(vitoria => {
+        const item = document.createElement('div');
+        item.className = 'vitoria-item';
+        item.innerHTML = `
+            <div class="vitoria-texto">${vitoria.texto}</div>
+            <div class="vitoria-data">${vitoria.dataStr}</div>
+        `;
+        listaHtml.appendChild(item);
+    });
+}
+
 
 if(painelTrincheira) {
     painelTrincheira.addEventListener('click', (e) => {
