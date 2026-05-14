@@ -16,8 +16,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 let usuarioLogado = null;
+let acessoPermitido = false; // NOVA TRAVA DE SEGURANÇA
 
-// Matriz global para segurar as anotações profundas da Bússola na memória
 let notasGlobaisBussola = ["", "", "", "", "", ""];
 
 // =========================================================
@@ -35,6 +35,7 @@ function atualizarData() {
 
 const loginScreen = document.getElementById('login-screen');
 const appDashboard = document.getElementById('app-dashboard');
+const paywallScreen = document.getElementById('paywall-screen');
 const userAvatar = document.getElementById('user-avatar');
 
 onAuthStateChanged(auth, async (user) => {
@@ -45,10 +46,11 @@ onAuthStateChanged(auth, async (user) => {
         userAvatar.src = user.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
         atualizarData(); 
         await puxarDadosDaNuvem();
-        atualizarProgressoTrincheira();
     } else {
         usuarioLogado = null;
+        acessoPermitido = false;
         appDashboard.classList.add('hidden');
+        paywallScreen.classList.add('hidden');
         loginScreen.classList.remove('hidden');
     }
 });
@@ -57,12 +59,13 @@ document.getElementById('btn-login-google').addEventListener('click', () => {
     signInWithPopup(auth, new GoogleAuthProvider()).catch(error => alert("Erro: " + error.message));
 });
 document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+document.getElementById('btn-paywall-logout').addEventListener('click', () => signOut(auth));
 
 // =========================================================
-// 2. BANCO DE DADOS (Firestore)
+// 2. BANCO DE DADOS (Firestore) & SISTEMA DE ACESSO
 // =========================================================
 async function salvarNaNuvem() {
-    if (!usuarioLogado) return;
+    if (!usuarioLogado || !acessoPermitido) return; // Não salva se estiver bloqueado
     const titulosBussola = document.querySelectorAll('.meta-titulo');
     const dadosBussola = [];
     titulosBussola.forEach(titulo => dadosBussola.push(titulo.textContent.trim()));
@@ -82,19 +85,40 @@ async function salvarNaNuvem() {
     try {
         await setDoc(doc(db, "usuarios", usuarioLogado.uid), {
             bussola: dadosBussola,
-            bussolaNotas: notasGlobaisBussola, // Salva as anotações longas
+            bussolaNotas: notasGlobaisBussola,
             trincheira: dadosTrincheira,
             ultimaAtualizacao: new Date().toISOString()
         }, { merge: true });
     } catch (e) { console.error("Erro Nuvem: ", e); }
 }
 
+// Função de Controle (Paywall)
+function verificarAcessoVisual(temAcesso) {
+    if (temAcesso) {
+        acessoPermitido = true;
+        paywallScreen.classList.add('hidden');
+        appDashboard.style.filter = "none";
+        appDashboard.style.pointerEvents = "auto";
+    } else {
+        acessoPermitido = false;
+        paywallScreen.classList.remove('hidden');
+        appDashboard.style.filter = "blur(10px)";
+        appDashboard.style.pointerEvents = "none";
+        appDashboard.style.userSelect = "none";
+    }
+}
+
 async function puxarDadosDaNuvem() {
     if (!usuarioLogado) return;
     try {
         const docSnap = await getDoc(doc(db, "usuarios", usuarioLogado.uid));
+        
         if (docSnap.exists()) {
             const dados = docSnap.data();
+
+            // MÓDULO DE SEGURANÇA E PAGAMENTO
+            verificarAcessoVisual(dados.acessoLiberado === true);
+
             if (dados.bussola) {
                 document.querySelectorAll('.meta-titulo').forEach((titulo, index) => {
                     if (dados.bussola[index]) titulo.textContent = dados.bussola[index];
@@ -125,21 +149,33 @@ async function puxarDadosDaNuvem() {
                 });
             }
         } else {
+            // Conta nova: Sem acesso por padrão
+            verificarAcessoVisual(false);
+            
             document.querySelectorAll('.meta-titulo').forEach((t, i) => {
                 if(i===0) t.textContent = "Sua grande visão em 5 anos...";
                 else t.textContent = "Defina sua meta...";
             });
+            
+            // Grava a estrutura básica travada
+            await setDoc(doc(db, "usuarios", usuarioLogado.uid), {
+                acessoLiberado: false,
+                emailOrigem: usuarioLogado.email,
+                dataCriacao: new Date().toISOString()
+            });
         }
+        
+        atualizarProgressoTrincheira();
+        
     } catch (e) { console.error("Erro puxar dados: ", e); }
 }
 
 // =========================================================
-// 3. CANVAS DE PLANEJAMENTO (SOBREPOSIÇÃO)
+// 3. CANVAS DE PLANEJAMENTO
 // =========================================================
 const painelTrincheira = document.getElementById('painel-trincheira');
 const painelPlanejamento = document.getElementById('painel-planejamento');
 const btnFecharPlanejamento = document.getElementById('btn-fechar-planejamento');
-
 const planBadge = document.getElementById('plan-badge-periodo');
 const planContextoPai = document.getElementById('plan-contexto-pai');
 const planInputMeta = document.getElementById('plan-input-meta');
@@ -157,61 +193,47 @@ const fractalMapeamento = [
     { periodo: "ESTA SEMANA", pai: "O Objetivo do Mês", filho: "Você vai fatiar esta meta em tarefas diárias na sua Trincheira." }
 ];
 
-// Abrir o Planejamento ao clicar na Bússola
 document.querySelectorAll('.meta-item').forEach(item => {
     item.addEventListener('click', () => {
-        // Remove destaque de todos e adiciona no clicado
         document.querySelectorAll('.meta-item').forEach(i => i.classList.remove('selecionado'));
         item.classList.add('selecionado');
-
         const nivelStr = item.getAttribute('data-nivel');
         nivelAtualEditando = parseInt(nivelStr);
         
         const configFase = fractalMapeamento[nivelAtualEditando];
         const tituloAtual = item.querySelector('.meta-titulo').textContent;
-        
         let textoPaiReal = configFase.pai;
         if (nivelAtualEditando > 0) {
             const paineis = document.querySelectorAll('.meta-titulo');
             textoPaiReal = `Alimenta: "${paineis[nivelAtualEditando - 1].textContent}"`;
         }
         
-        // Preenche o painel de planejamento
         planBadge.textContent = `PLANEJAMENTO: ${configFase.periodo}`;
         planContextoPai.textContent = textoPaiReal;
-        planInputMeta.value = tituloAtual === "Defina sua meta..." ? "" : tituloAtual;
-        planInputNotas.value = notasGlobaisBussola[nivelAtualEditando] || ""; // Carrega a anotação salva
+        planInputMeta.value = tituloAtual === "Defina sua meta..." || tituloAtual === "Sua grande visão em 5 anos..." ? "" : tituloAtual;
+        planInputNotas.value = notasGlobaisBussola[nivelAtualEditando] || ""; 
         planDicaFilho.textContent = configFase.filho;
         
-        // Efeito de transição de telas
         painelTrincheira.classList.add('hidden');
         painelPlanejamento.classList.remove('hidden');
     });
 });
 
-// Fechar Planejamento e Voltar para Trincheira
 function fecharPlanejamento() {
-    // 1. Salva o que foi digitado na interface lateral
     if (nivelAtualEditando > -1) {
         const novoTexto = planInputMeta.value.trim();
         if (novoTexto !== "") {
             const paineis = document.querySelectorAll('.meta-item');
             paineis[nivelAtualEditando].querySelector('.meta-titulo').textContent = novoTexto;
         }
-        // Atualiza a matriz global de notas
         notasGlobaisBussola[nivelAtualEditando] = planInputNotas.value;
-        
-        // Manda pro Firebase
         salvarNaNuvem();
     }
-
-    // 2. Tira seleção e inverte as telas
     document.querySelectorAll('.meta-item').forEach(i => i.classList.remove('selecionado'));
     painelPlanejamento.classList.add('hidden');
     painelTrincheira.classList.remove('hidden');
     nivelAtualEditando = -1;
 }
-
 btnFecharPlanejamento.addEventListener('click', fecharPlanejamento);
 
 // =========================================================
