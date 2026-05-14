@@ -1,38 +1,20 @@
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 body { background-color: #0f172a; color: #f8fafc; height: 100vh; overflow: hidden; }
 
-/* UTILS */
 .hidden { display: none !important; }
 
-/* ========================================================= */
-/* TELA DE LOGIN                                             */
-/* ========================================================= */
-.login-container {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: #0f172a; display: flex; justify-content: center; align-items: center;
-    z-index: 2000;
-}
-.login-card {
-    background-color: #1e293b; padding: 40px; border-radius: 20px; text-align: center;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.05); max-width: 400px; width: 90%;
-}
+/* Login */
+.login-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #0f172a; display: flex; justify-content: center; align-items: center; z-index: 2000; }
+.login-card { background-color: #1e293b; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.05); max-width: 400px; width: 90%; }
 .login-icon { font-size: 3rem; margin-bottom: 16px; }
 .login-card h2 { font-size: 1.8rem; margin-bottom: 8px; color: #f8fafc; }
 .login-card p { color: #94a3b8; margin-bottom: 32px; font-size: 0.95rem; }
-.btn-google {
-    background-color: white; color: #334155; font-weight: 600; font-size: 1rem;
-    padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-}
+.btn-google { background-color: white; color: #334155; font-weight: 600; font-size: 1rem; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; transition: background-color 0.2s ease, transform 0.1s ease; }
 .btn-google:hover { background-color: #f1f5f9; transform: translateY(-2px); }
 .google-logo { width: 24px; height: 24px; }
 .avatar-img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #3b82f6; object-fit: cover; }
 
-/* ========================================================= */
-/* LAYOUT PRINCIPAL DO APP                                   */
-/* ========================================================= */
+/* Layout Geral */
 .dashboard-container { display: grid; grid-template-columns: 70px 420px 1fr; height: 100vh; gap: 24px; padding: 24px 24px 24px 0; }
 .sidebar-icones { display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 10px 0 20px 0; border-right: 1px solid rgba(255, 255, 255, 0.05); }
 .menu-superior, .menu-inferior { display: flex; flex-direction: column; align-items: center; gap: 24px; width: 100%; }
@@ -48,6 +30,13 @@ body { background-color: #0f172a; color: #f8fafc; height: 100vh; overflow: hidde
 .bussola-panel::-webkit-scrollbar, .trincheira-panel::-webkit-scrollbar { width: 6px; }
 .bussola-panel::-webkit-scrollbar-thumb, .trincheira-panel::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 10px; }
 
+/* === NOVO: CABEÇALHO DA TRINCHEIRA === */
+.header-trincheira { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.header-trincheira h1 { font-size: 1.8rem; color: #f8fafc; text-transform: uppercase; }
+.btn-varrer { background-color: rgba(255, 255, 255, 0.05); color: #cbd5e1; border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 8px; }
+.btn-varrer:hover { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.3); }
+
+/* Trincheira Cards */
 .grid-temperaturas { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .card { background-color: #283548; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.05); overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; transition: transform 0.2s ease, box-shadow 0.2s ease; }
 .card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4); }
@@ -76,6 +65,7 @@ body { background-color: #0f172a; color: #f8fafc; height: 100vh; overflow: hidde
 .btn-add { background-color: rgba(255, 255, 255, 0.1); color: white; border: none; border-radius: 8px; width: 42px; font-size: 1.2rem; cursor: pointer; transition: background 0.2s ease; }
 .btn-add:hover { background-color: rgba(255, 255, 255, 0.2); }
 
+/* Bússola Fractal */
 .arvore-metas { display: flex; flex-direction: column; gap: 16px; position: relative; }
 .arvore-metas::before { content: ''; position: absolute; top: 20px; bottom: 40px; left: 18px; width: 2px; background-color: rgba(255, 255, 255, 0.05); z-index: 0; }
 .meta-item { display: flex; align-items: flex-start; gap: 16px; position: relative; z-index: 1; padding: 8px 0; }
@@ -92,6 +82,7 @@ body { background-color: #0f172a; color: #f8fafc; height: 100vh; overflow: hidde
 .progress-fill { height: 100%; background-color: #a855f7; border-radius: 4px; transition: width 0.5s ease-in-out; }
 .destaque-fill { background-color: #3b82f6; box-shadow: 0 0 8px rgba(59, 130, 246, 0.8); }
 
+/* Mobile */
 @media (max-width: 768px) {
     body { overflow-y: auto; } 
     .dashboard-container { display: flex; flex-direction: column; padding: 16px; padding-bottom: 90px; height: auto; gap: 16px; }
@@ -101,4 +92,5 @@ body { background-color: #0f172a; color: #f8fafc; height: 100vh; overflow: hidde
     .icone { width: 36px; height: 36px; margin-bottom: 0 !important; }
     .bussola-panel, .trincheira-panel { width: 100%; padding: 20px; overflow-y: visible; }
     .grid-temperaturas { grid-template-columns: 1fr; }
+    .header-trincheira { flex-direction: column; align-items: flex-start; gap: 12px; }
 }
