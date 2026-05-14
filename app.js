@@ -18,7 +18,66 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // 2. MOTOR FRACTAL: ATUALIZAR PROGRESSO E RISCAR TAREFA
+    // 2. SISTEMA DE MEMÓRIA (LOCAL STORAGE)
+    // =========================================================
+    
+    // Função para SALVAR o estado atual de todas as listas no dispositivo
+    function salvarDados() {
+        const listas = document.querySelectorAll('.task-list');
+        const dadosDoApp = [];
+
+        listas.forEach((lista) => {
+            const tarefasDaLista = [];
+            // Varre cada tarefa dentro desta lista
+            lista.querySelectorAll('.task-item').forEach(item => {
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                const texto = item.textContent.trim(); // Pega apenas o texto, sem o HTML
+                tarefasDaLista.push({ 
+                    texto: texto, 
+                    concluido: checkbox.checked 
+                });
+            });
+            dadosDoApp.push(tarefasDaLista);
+        });
+
+        // Converte os dados em texto e salva no cofre do navegador
+        localStorage.setItem('fractal_trincheira_estado', JSON.stringify(dadosDoApp));
+    }
+
+    // Função para CARREGAR os dados salvos quando o app abre
+    function carregarDados() {
+        const dadosSalvos = localStorage.getItem('fractal_trincheira_estado');
+        
+        if (dadosSalvos) {
+            const dadosDoApp = JSON.parse(dadosSalvos);
+            const listas = document.querySelectorAll('.task-list');
+
+            listas.forEach((lista, index) => {
+                if (dadosDoApp[index]) {
+                    lista.innerHTML = ''; // Limpa as tarefas genéricas do HTML original
+                    
+                    // Reconstrói as tarefas baseadas na memória salva
+                    dadosDoApp[index].forEach(tarefa => {
+                        const novaLabel = document.createElement('label');
+                        novaLabel.className = 'task-item';
+                        
+                        // Restaura o visual de "concluído" se estava marcado
+                        if (tarefa.concluido) {
+                            novaLabel.style.opacity = '0.4';
+                            novaLabel.style.textDecoration = 'line-through';
+                        }
+                        
+                        novaLabel.innerHTML = `<input type="checkbox" ${tarefa.concluido ? 'checked' : ''}> ${tarefa.texto}`;
+                        lista.appendChild(novaLabel);
+                    });
+                }
+            });
+        }
+    }
+
+
+    // =========================================================
+    // 3. MOTOR FRACTAL: ATUALIZAR PROGRESSO
     // =========================================================
     const barraSemana = document.querySelector('.destaque-fill');
 
@@ -42,13 +101,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const porcentagem = (concluidas / checkboxes.length) * 100;
         barraSemana.style.width = `${porcentagem}%`;
+        
+        // Sempre que o progresso muda, nós salvamos o estado atual
+        salvarDados();
     }
 
-    // Delegação de eventos: Escuta cliques em qualquer lugar da Trincheira
+    // Escuta cliques nos checkboxes em toda a Trincheira
     const painelTrincheira = document.querySelector('.trincheira-panel');
     if(painelTrincheira) {
         painelTrincheira.addEventListener('change', (e) => {
-            // Se o clique foi em um checkbox, atualiza o progresso
             if (e.target.type === 'checkbox') {
                 atualizarProgresso();
             }
@@ -56,37 +117,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // 3. INJEÇÃO DE DINAMISMO: ADICIONAR NOVA TAREFA
+    // 4. INJEÇÃO DE DINAMISMO: ADICIONAR NOVA TAREFA
     // =========================================================
     const botoesAdicionar = document.querySelectorAll('.btn-add');
 
     botoesAdicionar.forEach(botao => {
         botao.addEventListener('click', (e) => {
-            // Pega a caixa de formulário atual e a lista correspondente a ela
             const formContainer = e.target.parentElement;
             const inputField = formContainer.querySelector('.input-tarefa');
-            const taskList = formContainer.previousElementSibling; // A div .task-list que fica logo acima
+            const taskList = formContainer.previousElementSibling; 
             
             const textoTarefa = inputField.value.trim();
 
             if (textoTarefa !== '') {
-                // Cria o HTML da nova tarefa
                 const novaLabel = document.createElement('label');
                 novaLabel.className = 'task-item';
                 novaLabel.innerHTML = `<input type="checkbox"> ${textoTarefa}`;
                 
-                // Adiciona na lista visualmente
                 taskList.appendChild(novaLabel);
-                
-                // Limpa o campo para a próxima
                 inputField.value = '';
                 
-                // Recalcula o progresso (pois o número total de tarefas mudou)
+                // Atualiza o progresso e já salva a nova tarefa na memória
                 atualizarProgresso();
             }
         });
 
-        // Permite adicionar apertando "Enter" no teclado
         const inputF = botao.parentElement.querySelector('.input-tarefa');
         inputF.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -95,6 +150,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Roda uma vez no início para ajustar os itens que já vêm carregados no HTML
-    atualizarProgresso();
+    // =========================================================
+    // 5. INICIALIZAÇÃO DO APP
+    // =========================================================
+    carregarDados();     // 1º Puxa os dados da memória
+    atualizarProgresso(); // 2º Recalcula a barra e salva
 });
