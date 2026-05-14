@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // 3. O "Ctrl + F5" via código: Recarrega a página ignorando o cache
             setTimeout(() => {
                 window.location.reload(true);
-            }, 300); // Aguarda 300ms apenas para a animação do botão ser vista
+            }, 300); 
         });
     }
 });
