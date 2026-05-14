@@ -22,9 +22,6 @@ let historicoVitoriasGlobais = [];
 let eixosGlobais = [];
 let eixoAtivoIndex = 0; 
 
-// =========================================================
-// 1. O RELÓGIO E AUTENTICAÇÃO
-// =========================================================
 function atualizarData() {
     const elData = document.getElementById('data-hoje');
     if(elData) {
@@ -61,9 +58,6 @@ document.getElementById('btn-login-google').addEventListener('click', () => { si
 document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
 document.getElementById('btn-paywall-logout').addEventListener('click', () => signOut(auth));
 
-// =========================================================
-// 2. BANCO DE DADOS E MIGRAÇÃO DE EIXOS
-// =========================================================
 function verificarAcessoVisual(temAcesso) {
     if (temAcesso) {
         acessoPermitido = true;
@@ -151,7 +145,6 @@ async function puxarDadosDaNuvem() {
                             const opacity = tarefa.concluido ? '0.5' : '1';
                             const decoration = tarefa.concluido ? 'line-through' : 'none';
                             
-                            // NOVO HTML DA CHECKBOX (Custom CSS)
                             novaLabel.innerHTML = `
                                 <div class="task-content">
                                     <input type="checkbox" ${tarefa.concluido ? 'checked' : ''}> 
@@ -176,9 +169,6 @@ async function puxarDadosDaNuvem() {
     } catch (e) { console.error("Erro puxar dados: ", e); }
 }
 
-// =========================================================
-// 3. UI DOS EIXOS PARALELOS (NOVO: Editar e Excluir)
-// =========================================================
 const selectEixo = document.getElementById('select-eixo');
 const btnNovoEixo = document.getElementById('btn-novo-eixo');
 const btnEditarEixo = document.getElementById('btn-editar-eixo');
@@ -241,25 +231,14 @@ btnExcluirEixo.addEventListener('click', () => {
     const confirma = confirm(`Tem certeza que deseja apagar todo o eixo "${nomeAtual}" e suas metas de longo prazo?`);
     
     if (confirma) {
-        eixosGlobais.splice(eixoAtivoIndex, 1); // Remove o eixo
-        
-        // Se apagou o último eixo, cria um vazio para não bugar o app
-        if(eixosGlobais.length === 0) {
-            criarEixoInicial();
-        } else {
-            // Volta para o índice 0 por segurança
-            eixoAtivoIndex = 0;
-        }
-        
+        eixosGlobais.splice(eixoAtivoIndex, 1); 
+        if(eixosGlobais.length === 0) { criarEixoInicial(); } else { eixoAtivoIndex = 0; }
         renderizarSeletorEixos();
         carregarBussolaVisual();
         salvarNaNuvem();
     }
 });
 
-// =========================================================
-// 4. MODAL DE PLANEJAMENTO 
-// =========================================================
 const painelTrincheira = document.getElementById('painel-trincheira');
 const painelPlanejamento = document.getElementById('painel-planejamento');
 const painelVitorias = document.getElementById('painel-vitorias');
@@ -301,8 +280,6 @@ const fractalMapeamento = [
 
 document.querySelectorAll('.meta-item').forEach(item => {
     item.addEventListener('click', () => {
-        document.querySelectorAll('.meta-item').forEach(i => i.classList.remove('selecionado'));
-        item.classList.add('selecionado');
         const nivelStr = item.getAttribute('data-nivel');
         nivelAtualEditando = parseInt(nivelStr);
         
@@ -335,22 +312,15 @@ document.getElementById('btn-fechar-planejamento').addEventListener('click', () 
             eixosGlobais[eixoAtivoIndex].bussola[nivelAtualEditando] = novoTexto;
         }
         eixosGlobais[eixoAtivoIndex].bussolaNotas[nivelAtualEditando] = planInputNotas.value;
-        
         carregarBussolaVisual(); 
         salvarNaNuvem();
     }
-    document.querySelectorAll('.meta-item').forEach(i => i.classList.remove('selecionado'));
     painelPlanejamento.classList.add('hidden');
     navBussola.click(); 
 });
 
-// =========================================================
-// 5. MOTOR DA TRINCHEIRA & BARRA DIÁRIA
-// =========================================================
 const barraSemana = document.querySelector('.destaque-fill');
 const porcSemana = document.getElementById('porcentagem-semana');
-
-// Novo: Elementos do Progresso Diário
 const textoProgressoHoje = document.getElementById('texto-progresso-hoje');
 const barraProgressoHoje = document.getElementById('barra-progresso-hoje');
 
@@ -373,13 +343,11 @@ function atualizarProgressoTrincheira() {
     const total = checkboxes.length;
     const porcentagem = total > 0 ? Math.round((concluidas / total) * 100) : 0;
     
-    // Atualiza a barra da semana na Bússola
     if (barraSemana && porcSemana) {
         barraSemana.style.width = `${porcentagem}%`;
         porcSemana.textContent = `${porcentagem}%`;
     }
 
-    // Atualiza a barra do "PROGRESSE HOJE"
     if (textoProgressoHoje && barraProgressoHoje) {
         textoProgressoHoje.textContent = `${concluidas}/${total} TAREFAS CONCLUÍDAS (${porcentagem}%)`;
         barraProgressoHoje.style.width = `${porcentagem}%`;
@@ -446,8 +414,6 @@ document.querySelectorAll('.btn-add').forEach(botao => {
         if (textoTarefa !== '') {
             const novaLabel = document.createElement('label');
             novaLabel.className = 'task-item';
-            
-            // Cria a tarefa com o novo HTML customizado
             novaLabel.innerHTML = `
                 <div class="task-content">
                     <input type="checkbox"> 
