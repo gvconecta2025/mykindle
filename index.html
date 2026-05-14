@@ -38,7 +38,7 @@
     </div>
 
     <div id="app-dashboard" class="dashboard-container hidden">
-        <!-- MENU LATERAL COM NAVEGAÇÃO -->
+        <!-- MENU LATERAL -->
         <nav class="sidebar-icones">
             <div class="menu-superior">
                 <div class="icone logo" title="Menu">≡</div>
@@ -54,7 +54,14 @@
         </nav>
 
         <aside class="bussola-panel">
-            <h2 style="margin-bottom: 24px; font-size: 1.2rem; letter-spacing: 1px;">NORTE DE LONGO PRAZO</h2>
+            <h2 style="margin-bottom: 16px; font-size: 1.2rem; letter-spacing: 1px;">NORTE DE LONGO PRAZO</h2>
+            
+            <!-- === NOVO: SELETOR DE EIXOS === -->
+            <div class="eixos-header">
+                <select id="select-eixo" class="input-eixo" title="Alternar Projeto/Eixo"></select>
+                <button id="btn-novo-eixo" class="btn-add" title="Criar Novo Eixo Estratégico">+</button>
+            </div>
+
             <div class="arvore-metas">
                 <div class="meta-item nivel-1" data-nivel="0">
                     <div class="meta-icone">🏔️</div>
