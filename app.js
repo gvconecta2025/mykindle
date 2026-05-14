@@ -18,30 +18,20 @@ const db = getFirestore(app);
 let usuarioLogado = null;
 
 // =========================================================
-// 1. O RELÓGIO (Data Dinâmica)
+// 1. O RELÓGIO E AUTENTICAÇÃO
 // =========================================================
 function atualizarData() {
     const elData = document.getElementById('data-hoje');
     if(elData) {
         const diasSemana = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
         const meses = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
-        
         const hoje = new Date();
-        const diaSemanaStr = diasSemana[hoje.getDay()];
-        const dia = hoje.getDate();
-        const mesStr = meses[hoje.getMonth()];
-        
-        elData.textContent = `HOJE: ${diaSemanaStr}, ${dia} DE ${mesStr}`;
+        elData.textContent = `HOJE: ${diasSemana[hoje.getDay()]}, ${hoje.getDate()} DE ${meses[hoje.getMonth()]}`;
     }
 }
 
-// =========================================================
-// 2. AUTENTICAÇÃO E INICIALIZAÇÃO
-// =========================================================
 const loginScreen = document.getElementById('login-screen');
 const appDashboard = document.getElementById('app-dashboard');
-const btnLoginGoogle = document.getElementById('btn-login-google');
-const btnLogout = document.getElementById('btn-logout');
 const userAvatar = document.getElementById('user-avatar');
 
 onAuthStateChanged(auth, async (user) => {
@@ -50,8 +40,7 @@ onAuthStateChanged(auth, async (user) => {
         loginScreen.classList.add('hidden');
         appDashboard.classList.remove('hidden');
         userAvatar.src = user.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-        
-        atualizarData(); // Roda o relógio
+        atualizarData(); 
         await puxarDadosDaNuvem();
         atualizarProgressoTrincheira();
     } else {
@@ -61,15 +50,13 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-btnLoginGoogle.addEventListener('click', () => {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider).catch(error => alert("Erro ao fazer login: " + error.message));
+document.getElementById('btn-login-google').addEventListener('click', () => {
+    signInWithPopup(auth, new GoogleAuthProvider()).catch(error => alert("Erro: " + error.message));
 });
-
-btnLogout.addEventListener('click', () => signOut(auth));
+document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
 
 // =========================================================
-// 3. BANCO DE DADOS (Firestore)
+// 2. BANCO DE DADOS (Firestore)
 // =========================================================
 async function salvarNaNuvem() {
     if (!usuarioLogado) return;
@@ -118,7 +105,6 @@ async function puxarDadosDaNuvem() {
                             novaLabel.className = 'task-item';
                             const opacidade = tarefa.concluido ? '0.4' : '1';
                             const risco = tarefa.concluido ? 'line-through' : 'none';
-                            
                             novaLabel.innerHTML = `
                                 <div class="task-content" style="opacity: ${opacidade}; text-decoration: ${risco};">
                                     <input type="checkbox" ${tarefa.concluido ? 'checked' : ''}> 
@@ -132,14 +118,93 @@ async function puxarDadosDaNuvem() {
                 });
             }
         } else {
-            document.querySelectorAll('.meta-titulo').forEach(t => t.textContent = "Defina sua meta");
-            document.querySelectorAll('.task-list').forEach(l => l.innerHTML = '');
+            document.querySelectorAll('.meta-titulo').forEach((t, i) => {
+                if(i===0) t.textContent = "Sua grande visão em 5 anos...";
+                else t.textContent = "Defina sua meta...";
+            });
         }
     } catch (e) { console.error("Erro puxar dados: ", e); }
 }
 
 // =========================================================
-// 4. MOTOR FRACTAL, UI & VARREDURA
+// 3. NOVO: LÓGICA DA SALA DE GUERRA (MODAL DE PLANEJAMENTO)
+// =========================================================
+const modalPlanejamento = document.getElementById('modal-planejamento');
+const btnFecharModal = document.getElementById('btn-fechar-modal');
+const btnSalvarModal = document.getElementById('btn-salvar-planejamento');
+
+const modalBadge = document.getElementById('modal-badge-periodo');
+const modalContextoPai = document.getElementById('modal-contexto-pai');
+const modalInputMeta = document.getElementById('modal-input-meta');
+const modalDicaFilho = document.getElementById('modal-dica-filho');
+
+let nivelAtualEditando = -1; // Guarda qual caixa da bússola abriu o modal
+
+// Dicionário do Método Fractal: Explica as conexões entre os níveis
+const fractalMapeamento = [
+    { periodo: "5 ANOS", pai: "Este é o seu Norte Estelar Supremo. O ápice da montanha.", filho: "Você desdobrará isso em 5 metas anuais consistentes." },
+    { periodo: "1 ANO", pai: "A Meta de 5 Anos", filho: "Para bater este ano, você o dividirá em 2 Grandes Semestres (6 meses)." },
+    { periodo: "6 MESES", pai: "A Meta de 1 Ano", filho: "Metade do percurso. O próximo passo é focar no Trimestre (3 meses)." },
+    { periodo: "3 MESES", pai: "A Meta Semestral (6 Meses)", filho: "Quase lá. Vamos reduzir o foco para metas mensais táticas." },
+    { periodo: "1 MÊS", pai: "O Fechamento do Trimestre (3 Meses)", filho: "Isso se transformará nas 4 batalhas semanais ativas." },
+    { periodo: "ESTA SEMANA", pai: "O Objetivo do Mês", filho: "Você vai fatiar esta meta em tarefas diárias na sua Trincheira." }
+];
+
+// Quando o usuário clica em qualquer card da bússola
+document.querySelectorAll('.meta-item').forEach(item => {
+    item.addEventListener('click', () => {
+        const nivelStr = item.getAttribute('data-nivel');
+        nivelAtualEditando = parseInt(nivelStr);
+        
+        const configFase = fractalMapeamento[nivelAtualEditando];
+        const tituloAtual = item.querySelector('.meta-titulo').textContent;
+        
+        // Pega o título real da meta pai para dar mais clareza, se não for o topo
+        let textoPaiReal = configFase.pai;
+        if (nivelAtualEditando > 0) {
+            const paineis = document.querySelectorAll('.meta-titulo');
+            textoPaiReal = `Alimenta: "${paineis[nivelAtualEditando - 1].textContent}"`;
+        }
+        
+        // Preenche os dados do Modal
+        modalBadge.textContent = `PLANEJAMENTO: ${configFase.periodo}`;
+        modalContextoPai.textContent = textoPaiReal;
+        modalInputMeta.value = tituloAtual === "Defina sua meta..." ? "" : tituloAtual;
+        modalDicaFilho.textContent = configFase.filho;
+        
+        // Abre o Modal
+        modalPlanejamento.classList.remove('hidden');
+        modalInputMeta.focus();
+    });
+});
+
+// Fechar Modal
+function fecharModal() {
+    modalPlanejamento.classList.add('hidden');
+    nivelAtualEditando = -1;
+}
+
+btnFecharModal.addEventListener('click', fecharModal);
+
+// Salvar Modal
+btnSalvarModal.addEventListener('click', () => {
+    if (nivelAtualEditando > -1) {
+        const novoTexto = modalInputMeta.value.trim();
+        if (novoTexto !== "") {
+            // Atualiza o texto na bússola visualmente
+            const paineis = document.querySelectorAll('.meta-item');
+            paineis[nivelAtualEditando].querySelector('.meta-titulo').textContent = novoTexto;
+            
+            // Salva no banco de dados
+            salvarNaNuvem();
+        }
+    }
+    fecharModal();
+});
+
+
+// =========================================================
+// 4. MOTOR DA TRINCHEIRA
 // =========================================================
 const barraSemana = document.querySelector('.destaque-fill');
 
@@ -166,23 +231,14 @@ function atualizarProgressoTrincheira() {
     salvarNaNuvem();
 }
 
-// Botão de Varrer Concluídas
 const btnVarrer = document.getElementById('btn-varrer');
 if (btnVarrer) {
     btnVarrer.addEventListener('click', () => {
-        const checkboxes = document.querySelectorAll('.task-item input[type="checkbox"]');
         let limpouAlgo = false;
-        
-        checkboxes.forEach(box => {
-            if (box.checked) {
-                box.closest('.task-item').remove();
-                limpouAlgo = true;
-            }
+        document.querySelectorAll('.task-item input[type="checkbox"]').forEach(box => {
+            if (box.checked) { box.closest('.task-item').remove(); limpouAlgo = true; }
         });
-        
-        if(limpouAlgo) {
-            atualizarProgressoTrincheira(); // Recalcula e salva
-        }
+        if(limpouAlgo) atualizarProgressoTrincheira(); 
     });
 }
 
@@ -223,13 +279,6 @@ document.querySelectorAll('.btn-add').forEach(botao => {
     });
     const inputF = botao.parentElement.querySelector('.input-tarefa');
     inputF.addEventListener('keypress', (e) => { if (e.key === 'Enter') botao.click(); });
-});
-
-document.querySelectorAll('.meta-titulo').forEach(titulo => {
-    titulo.addEventListener('blur', salvarNaNuvem);
-    titulo.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); titulo.blur(); }
-    });
 });
 
 const btnSync = document.getElementById('btn-sync');
