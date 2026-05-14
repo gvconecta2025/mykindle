@@ -31,6 +31,12 @@ body { background-color: #0f172a; color: #f8fafc; height: 100vh; overflow: hidde
 .bussola-panel::-webkit-scrollbar, .trincheira-panel::-webkit-scrollbar, .planejamento-panel::-webkit-scrollbar { width: 6px; }
 .bussola-panel::-webkit-scrollbar-thumb, .trincheira-panel::-webkit-scrollbar-thumb, .planejamento-panel::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 10px; }
 
+/* === NOVO: SELETOR DE EIXOS DA BÚSSOLA === */
+.eixos-header { display: flex; gap: 8px; margin-bottom: 24px; }
+.input-eixo { flex: 1; background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 10px 14px; color: #60a5fa; font-weight: 600; font-size: 0.95rem; outline: none; transition: border 0.2s ease; cursor: pointer; appearance: none; }
+.input-eixo:focus { border-color: #60a5fa; }
+.input-eixo option { background-color: #1e293b; color: #f8fafc; }
+
 /* Trincheira (Hoje) */
 .header-trincheira { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
 .header-trincheira h1 { font-size: 1.8rem; color: #f8fafc; text-transform: uppercase; }
@@ -104,7 +110,7 @@ body { background-color: #0f172a; color: #f8fafc; height: 100vh; overflow: hidde
 .alerta-desdobramento { background-color: rgba(168, 85, 247, 0.1); border-left: 4px solid #a855f7; padding: 16px; border-radius: 4px; font-size: 0.9rem; color: #e2e8f0; margin-top: 24px; }
 .alerta-desdobramento strong { color: #c084fc; display: block; margin-bottom: 4px; }
 
-/* === NOVO: COFRE DE VITÓRIAS === */
+/* Cofre de Vitórias */
 .historico-container { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
 .vitoria-item { background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); padding: 16px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; animation: fadeIn 0.3s ease; }
 .vitoria-texto { color: #e2e8f0; font-size: 1rem; display: flex; align-items: center; gap: 12px; }
