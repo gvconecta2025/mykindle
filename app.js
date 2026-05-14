@@ -18,8 +18,11 @@ const db = getFirestore(app);
 
 let usuarioLogado = null;
 let acessoPermitido = false; 
-let notasGlobaisBussola = ["", "", "", "", "", ""];
-let historicoVitoriasGlobais = []; // NOVO: Armazena as tarefas concluídas varridas
+let historicoVitoriasGlobais = []; 
+
+// === NOVO: SISTEMA DE EIXOS (MÚLTIPLAS BÚSSOLAS) ===
+let eixosGlobais = [];
+let eixoAtivoIndex = 0; // Aponta para qual eixo está sendo visualizado agora
 
 // =========================================================
 // 1. O RELÓGIO E AUTENTICAÇÃO
@@ -56,14 +59,12 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-document.getElementById('btn-login-google').addEventListener('click', () => {
-    signInWithPopup(auth, new GoogleAuthProvider()).catch(error => alert("Erro: " + error.message));
-});
+document.getElementById('btn-login-google').addEventListener('click', () => { signInWithPopup(auth, new GoogleAuthProvider()).catch(error => alert("Erro: " + error.message)); });
 document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
 document.getElementById('btn-paywall-logout').addEventListener('click', () => signOut(auth));
 
 // =========================================================
-// 2. BANCO DE DADOS (Firestore)
+// 2. BANCO DE DADOS E MIGRAÇÃO DE EIXOS
 // =========================================================
 function verificarAcessoVisual(temAcesso) {
     if (temAcesso) {
@@ -82,10 +83,8 @@ function verificarAcessoVisual(temAcesso) {
 
 async function salvarNaNuvem() {
     if (!usuarioLogado || !acessoPermitido) return;
-    const titulosBussola = document.querySelectorAll('.meta-titulo');
-    const dadosBussola = [];
-    titulosBussola.forEach(titulo => dadosBussola.push(titulo.textContent.trim()));
 
+    // Coleta a Trincheira (Global)
     const listas = document.querySelectorAll('.task-list');
     const dadosTrincheira = [];
     listas.forEach((lista) => {
@@ -100,10 +99,10 @@ async function salvarNaNuvem() {
 
     try {
         await setDoc(doc(db, "usuarios", usuarioLogado.uid), {
-            bussola: dadosBussola,
-            bussolaNotas: notasGlobaisBussola,
+            eixosGlobais: eixosGlobais, // Salva o array de objetos dos Eixos
+            eixoAtivoIndex: eixoAtivoIndex,
             trincheira: dadosTrincheira,
-            historico: historicoVitoriasGlobais, // Envia o histórico para a nuvem
+            historico: historicoVitoriasGlobais,
             ultimaAtualizacao: new Date().toISOString()
         }, { merge: true });
     } catch (e) { console.error("Erro Nuvem: ", e); }
@@ -118,13 +117,26 @@ async function puxarDadosDaNuvem() {
             const dados = docSnap.data();
             verificarAcessoVisual(dados.acessoLiberado === true);
 
-            if (dados.bussola) {
-                document.querySelectorAll('.meta-titulo').forEach((titulo, index) => {
-                    if (dados.bussola[index]) titulo.textContent = dados.bussola[index];
-                });
+            // LOGICA DE MIGRAÇÃO: Suporte a dados antigos e novos
+            if (dados.eixosGlobais) {
+                eixosGlobais = dados.eixosGlobais;
+                eixoAtivoIndex = dados.eixoAtivoIndex !== undefined ? dados.eixoAtivoIndex : 0;
+            } else if (dados.bussola) {
+                // Migrando o usuário antigo para o formato de Eixos
+                eixosGlobais = [{
+                    nome: "Eixo Principal",
+                    bussola: dados.bussola,
+                    bussolaNotas: dados.bussolaNotas || ["","","","","",""]
+                }];
+                eixoAtivoIndex = 0;
+            } else {
+                // Conta Zerada mas que já tem doc no banco
+                criarEixoInicial();
             }
-            if (dados.bussolaNotas) notasGlobaisBussola = dados.bussolaNotas;
-            if (dados.historico) historicoVitoriasGlobais = dados.historico; // Recupera vitórias
+
+            renderizarSeletorEixos();
+            carregarBussolaVisual();
+            if (dados.historico) historicoVitoriasGlobais = dados.historico; 
 
             if (dados.trincheira) {
                 document.querySelectorAll('.task-list').forEach((lista, index) => {
@@ -149,20 +161,78 @@ async function puxarDadosDaNuvem() {
             }
         } else {
             verificarAcessoVisual(false);
-            document.querySelectorAll('.meta-titulo').forEach((t, i) => {
-                if(i===0) t.textContent = "Sua grande visão em 5 anos...";
-                else t.textContent = "Defina sua meta...";
-            });
+            criarEixoInicial();
+            renderizarSeletorEixos();
+            carregarBussolaVisual();
+            
             await setDoc(doc(db, "usuarios", usuarioLogado.uid), {
-                acessoLiberado: false, emailOrigem: usuarioLogado.email, dataCriacao: new Date().toISOString()
+                acessoLiberado: false, emailOrigem: usuarioLogado.email, dataCriacao: new Date().toISOString(), eixosGlobais: eixosGlobais, eixoAtivoIndex: 0
             });
         }
         atualizarProgressoTrincheira();
     } catch (e) { console.error("Erro puxar dados: ", e); }
 }
 
+function criarEixoInicial() {
+    eixosGlobais = [{
+        nome: "Eixo Principal",
+        bussola: ["Sua grande visão em 5 anos...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta..."],
+        bussolaNotas: ["", "", "", "", "", ""]
+    }];
+    eixoAtivoIndex = 0;
+}
+
 // =========================================================
-// 3. NAVEGAÇÃO E PAINÉIS (Trincheira vs Planejamento vs Vitórias)
+// 3. UI DOS EIXOS PARALELOS
+// =========================================================
+const selectEixo = document.getElementById('select-eixo');
+const btnNovoEixo = document.getElementById('btn-novo-eixo');
+
+function renderizarSeletorEixos() {
+    selectEixo.innerHTML = '';
+    eixosGlobais.forEach((eixo, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = eixo.nome;
+        if (index === eixoAtivoIndex) option.selected = true;
+        selectEixo.appendChild(option);
+    });
+}
+
+function carregarBussolaVisual() {
+    if(!eixosGlobais[eixoAtivoIndex]) return;
+    const eixoAtual = eixosGlobais[eixoAtivoIndex];
+    document.querySelectorAll('.meta-titulo').forEach((titulo, index) => {
+        titulo.textContent = eixoAtual.bussola[index] || "Defina sua meta...";
+    });
+}
+
+// Quando muda o select, recarrega a tela
+selectEixo.addEventListener('change', (e) => {
+    eixoAtivoIndex = parseInt(e.target.value);
+    carregarBussolaVisual();
+    salvarNaNuvem(); // Memoriza a última aba aberta
+});
+
+// Adicionar novo eixo (Projeto paralelo)
+btnNovoEixo.addEventListener('click', () => {
+    const nomeNovoEixo = prompt("Nome do novo Eixo Estratégico (Ex: Concurso, Empresa, etc):");
+    if (nomeNovoEixo && nomeNovoEixo.trim() !== "") {
+        eixosGlobais.push({
+            nome: nomeNovoEixo.trim(),
+            bussola: ["Sua grande visão em 5 anos...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta..."],
+            bussolaNotas: ["", "", "", "", "", ""]
+        });
+        eixoAtivoIndex = eixosGlobais.length - 1; // Já muda pra ele
+        renderizarSeletorEixos();
+        carregarBussolaVisual();
+        salvarNaNuvem();
+    }
+});
+
+
+// =========================================================
+// 4. NAVEGAÇÃO E PAINÉIS 
 // =========================================================
 const painelTrincheira = document.getElementById('painel-trincheira');
 const painelPlanejamento = document.getElementById('painel-planejamento');
@@ -170,7 +240,6 @@ const painelVitorias = document.getElementById('painel-vitorias');
 const navBussola = document.getElementById('nav-bussola');
 const navVitorias = document.getElementById('nav-vitorias');
 
-// Navegação do Menu Esquerdo
 navBussola.addEventListener('click', () => {
     document.querySelectorAll('.icone').forEach(i => i.classList.remove('ativo'));
     navBussola.classList.add('ativo');
@@ -185,10 +254,12 @@ navVitorias.addEventListener('click', () => {
     painelTrincheira.classList.add('hidden');
     painelPlanejamento.classList.add('hidden');
     painelVitorias.classList.remove('hidden');
-    renderizarHistorico(); // Carrega as vitórias na tela
+    renderizarHistorico(); 
 });
 
-// Modal de Planejamento (Sala de Guerra)
+// =========================================================
+// 5. MODAL DE PLANEJAMENTO (Vinculado ao Eixo Ativo)
+// =========================================================
 const planBadge = document.getElementById('plan-badge-periodo');
 const planContextoPai = document.getElementById('plan-contexto-pai');
 const planInputMeta = document.getElementById('plan-input-meta');
@@ -213,16 +284,20 @@ document.querySelectorAll('.meta-item').forEach(item => {
         nivelAtualEditando = parseInt(nivelStr);
         
         const configFase = fractalMapeamento[nivelAtualEditando];
-        const tituloAtual = item.querySelector('.meta-titulo').textContent;
+        const eixoAtual = eixosGlobais[eixoAtivoIndex];
+        
         let textoPaiReal = configFase.pai;
         if (nivelAtualEditando > 0) {
-            textoPaiReal = `Alimenta: "${document.querySelectorAll('.meta-titulo')[nivelAtualEditando - 1].textContent}"`;
+            textoPaiReal = `Alimenta: "${eixoAtual.bussola[nivelAtualEditando - 1]}"`;
         }
         
-        planBadge.textContent = `PLANEJAMENTO: ${configFase.periodo}`;
+        planBadge.getContext = `PLANEJAMENTO: ${configFase.periodo}`; // Correção visual
+        planBadge.textContent = `PLANEJAMENTO: ${configFase.periodo} - [${eixoAtual.nome.toUpperCase()}]`; // Mostra no título qual eixo está editando
         planContextoPai.textContent = textoPaiReal;
+        
+        const tituloAtual = eixoAtual.bussola[nivelAtualEditando];
         planInputMeta.value = tituloAtual === "Defina sua meta..." || tituloAtual === "Sua grande visão em 5 anos..." ? "" : tituloAtual;
-        planInputNotas.value = notasGlobaisBussola[nivelAtualEditando] || ""; 
+        planInputNotas.value = eixoAtual.bussolaNotas[nivelAtualEditando] || ""; 
         planDicaFilho.textContent = configFase.filho;
         
         painelTrincheira.classList.add('hidden');
@@ -234,18 +309,23 @@ document.querySelectorAll('.meta-item').forEach(item => {
 document.getElementById('btn-fechar-planejamento').addEventListener('click', () => {
     if (nivelAtualEditando > -1) {
         const novoTexto = planInputMeta.value.trim();
-        if (novoTexto !== "") document.querySelectorAll('.meta-item')[nivelAtualEditando].querySelector('.meta-titulo').textContent = novoTexto;
-        notasGlobaisBussola[nivelAtualEditando] = planInputNotas.value;
+        if (novoTexto !== "") {
+            // Salva no objeto JavaScript em vez de ler da tela
+            eixosGlobais[eixoAtivoIndex].bussola[nivelAtualEditando] = novoTexto;
+        }
+        eixosGlobais[eixoAtivoIndex].bussolaNotas[nivelAtualEditando] = planInputNotas.value;
+        
+        carregarBussolaVisual(); // Reflete a mudança na barra lateral
         salvarNaNuvem();
     }
     document.querySelectorAll('.meta-item').forEach(i => i.classList.remove('selecionado'));
     painelPlanejamento.classList.add('hidden');
-    navBussola.click(); // Volta ativando a aba da Trincheira
+    navBussola.click(); 
 });
 
 
 // =========================================================
-// 4. MOTOR DA TRINCHEIRA & ARQUIVAMENTO (VARREDURA)
+// 6. MOTOR DA TRINCHEIRA E ARQUIVAMENTO
 // =========================================================
 const barraSemana = document.querySelector('.destaque-fill');
 
@@ -272,60 +352,40 @@ function atualizarProgressoTrincheira() {
     salvarNaNuvem();
 }
 
-// ARQUIVAMENTO: O botão varrer agora manda pro Histórico
 const btnVarrer = document.getElementById('btn-varrer');
 if (btnVarrer) {
     btnVarrer.addEventListener('click', () => {
         let limpouAlgo = false;
-        
-        // Pega a data atual formatada (Ex: 14/05/2026 - 15:30)
         const dataAtual = new Date();
         const dataFormatada = `${dataAtual.getDate().toString().padStart(2, '0')}/${(dataAtual.getMonth()+1).toString().padStart(2, '0')}/${dataAtual.getFullYear()} às ${dataAtual.getHours().toString().padStart(2, '0')}:${dataAtual.getMinutes().toString().padStart(2, '0')}`;
 
         document.querySelectorAll('.task-item input[type="checkbox"]').forEach(box => {
             if (box.checked) { 
                 const textoTarefa = box.closest('.task-item').querySelector('.task-text').textContent;
-                
-                // Salva no banco de vitórias
-                historicoVitoriasGlobais.push({
-                    texto: textoTarefa,
-                    dataStr: dataFormatada
-                });
-
-                // Remove da Trincheira
+                historicoVitoriasGlobais.push({ texto: textoTarefa, dataStr: dataFormatada });
                 box.closest('.task-item').remove(); 
                 limpouAlgo = true; 
             }
         });
-        
         if(limpouAlgo) atualizarProgressoTrincheira(); 
     });
 }
 
-// Renderiza o Histórico na Tela de Vitórias
 function renderizarHistorico() {
     const listaHtml = document.getElementById('lista-vitorias');
     listaHtml.innerHTML = '';
-
     if (historicoVitoriasGlobais.length === 0) {
         listaHtml.innerHTML = '<p class="vazio-msg">Seu cofre está vazio. Conclua e varra tarefas na Trincheira para preenchê-lo.</p>';
         return;
     }
-
-    // Cria os itens invertidos (Os mais novos no topo)
     const historicoReverso = [...historicoVitoriasGlobais].reverse();
-    
     historicoReverso.forEach(vitoria => {
         const item = document.createElement('div');
         item.className = 'vitoria-item';
-        item.innerHTML = `
-            <div class="vitoria-texto">${vitoria.texto}</div>
-            <div class="vitoria-data">${vitoria.dataStr}</div>
-        `;
+        item.innerHTML = `<div class="vitoria-texto">${vitoria.texto}</div><div class="vitoria-data">${vitoria.dataStr}</div>`;
         listaHtml.appendChild(item);
     });
 }
-
 
 if(painelTrincheira) {
     painelTrincheira.addEventListener('click', (e) => {
