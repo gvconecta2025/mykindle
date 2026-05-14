@@ -1,8 +1,21 @@
+// =========================================================
+// REGISTRO DO SERVICE WORKER (Para instalar e rodar offline)
+// =========================================================
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(registration => {
+                console.log('PWA registrado com sucesso! Escopo:', registration.scope);
+            })
+            .catch(error => {
+                console.log('Falha ao registrar o PWA:', error);
+            });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     
-    // =========================================================
-    // 1. SISTEMA DE ATUALIZAÇÃO DO PWA
-    // =========================================================
+    // 1. SISTEMA DE ATUALIZAÇÃO DO PWA (Botão Sincronizar)
     const btnSync = document.getElementById('btn-sync');
     if (btnSync) {
         btnSync.addEventListener('click', () => {
@@ -17,56 +30,39 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // =========================================================
     // 2. SISTEMA DE MEMÓRIA (LOCAL STORAGE)
-    // =========================================================
-    
-    // Função para SALVAR o estado atual de todas as listas no dispositivo
     function salvarDados() {
         const listas = document.querySelectorAll('.task-list');
         const dadosDoApp = [];
 
         listas.forEach((lista) => {
             const tarefasDaLista = [];
-            // Varre cada tarefa dentro desta lista
             lista.querySelectorAll('.task-item').forEach(item => {
                 const checkbox = item.querySelector('input[type="checkbox"]');
-                const texto = item.textContent.trim(); // Pega apenas o texto, sem o HTML
-                tarefasDaLista.push({ 
-                    texto: texto, 
-                    concluido: checkbox.checked 
-                });
+                const texto = item.textContent.trim(); 
+                tarefasDaLista.push({ texto: texto, concluido: checkbox.checked });
             });
             dadosDoApp.push(tarefasDaLista);
         });
-
-        // Converte os dados em texto e salva no cofre do navegador
         localStorage.setItem('fractal_trincheira_estado', JSON.stringify(dadosDoApp));
     }
 
-    // Função para CARREGAR os dados salvos quando o app abre
     function carregarDados() {
         const dadosSalvos = localStorage.getItem('fractal_trincheira_estado');
-        
         if (dadosSalvos) {
             const dadosDoApp = JSON.parse(dadosSalvos);
             const listas = document.querySelectorAll('.task-list');
 
             listas.forEach((lista, index) => {
                 if (dadosDoApp[index]) {
-                    lista.innerHTML = ''; // Limpa as tarefas genéricas do HTML original
-                    
-                    // Reconstrói as tarefas baseadas na memória salva
+                    lista.innerHTML = ''; 
                     dadosDoApp[index].forEach(tarefa => {
                         const novaLabel = document.createElement('label');
                         novaLabel.className = 'task-item';
-                        
-                        // Restaura o visual de "concluído" se estava marcado
                         if (tarefa.concluido) {
                             novaLabel.style.opacity = '0.4';
                             novaLabel.style.textDecoration = 'line-through';
                         }
-                        
                         novaLabel.innerHTML = `<input type="checkbox" ${tarefa.concluido ? 'checked' : ''}> ${tarefa.texto}`;
                         lista.appendChild(novaLabel);
                     });
@@ -75,18 +71,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
-    // =========================================================
     // 3. MOTOR FRACTAL: ATUALIZAR PROGRESSO
-    // =========================================================
     const barraSemana = document.querySelector('.destaque-fill');
-
     function atualizarProgresso() {
         const checkboxes = document.querySelectorAll('.task-item input[type="checkbox"]');
         if (checkboxes.length === 0 || !barraSemana) return;
 
         let concluidas = 0;
-        
         checkboxes.forEach(box => {
             const label = box.parentElement;
             if (box.checked) {
@@ -101,12 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const porcentagem = (concluidas / checkboxes.length) * 100;
         barraSemana.style.width = `${porcentagem}%`;
-        
-        // Sempre que o progresso muda, nós salvamos o estado atual
         salvarDados();
     }
 
-    // Escuta cliques nos checkboxes em toda a Trincheira
     const painelTrincheira = document.querySelector('.trincheira-panel');
     if(painelTrincheira) {
         painelTrincheira.addEventListener('change', (e) => {
@@ -116,11 +104,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // =========================================================
     // 4. INJEÇÃO DE DINAMISMO: ADICIONAR NOVA TAREFA
-    // =========================================================
     const botoesAdicionar = document.querySelectorAll('.btn-add');
-
     botoesAdicionar.forEach(botao => {
         botao.addEventListener('click', (e) => {
             const formContainer = e.target.parentElement;
@@ -128,7 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const taskList = formContainer.previousElementSibling; 
             
             const textoTarefa = inputField.value.trim();
-
             if (textoTarefa !== '') {
                 const novaLabel = document.createElement('label');
                 novaLabel.className = 'task-item';
@@ -136,23 +120,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 taskList.appendChild(novaLabel);
                 inputField.value = '';
-                
-                // Atualiza o progresso e já salva a nova tarefa na memória
                 atualizarProgresso();
             }
         });
 
         const inputF = botao.parentElement.querySelector('.input-tarefa');
         inputF.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                botao.click();
-            }
+            if (e.key === 'Enter') { botao.click(); }
         });
     });
 
-    // =========================================================
-    // 5. INICIALIZAÇÃO DO APP
-    // =========================================================
-    carregarDados();     // 1º Puxa os dados da memória
-    atualizarProgresso(); // 2º Recalcula a barra e salva
+    // 5. INICIALIZAÇÃO
+    carregarDados();     
+    atualizarProgresso(); 
 });
