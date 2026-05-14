@@ -6,7 +6,9 @@ if ('serviceWorker' in navigator) {
 
 document.addEventListener('DOMContentLoaded', () => {
     
+    // =========================================================
     // 1. PWA SYNC
+    // =========================================================
     const btnSync = document.getElementById('btn-sync');
     if (btnSync) {
         btnSync.addEventListener('click', () => {
@@ -17,8 +19,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 2. SISTEMA DE MEMÓRIA (Salvando a exclusão)
-    function salvarDados() {
+    // =========================================================
+    // 2. SISTEMA DE MEMÓRIA (TRINCHEIRA)
+    // =========================================================
+    function salvarTrincheira() {
         const listas = document.querySelectorAll('.task-list');
         const dadosDoApp = [];
 
@@ -34,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('fractal_trincheira_estado', JSON.stringify(dadosDoApp));
     }
 
-    function carregarDados() {
+    function carregarTrincheira() {
         const dadosSalvos = localStorage.getItem('fractal_trincheira_estado');
         if (dadosSalvos) {
             const dadosDoApp = JSON.parse(dadosSalvos);
@@ -64,7 +68,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 3. MOTOR FRACTAL E EXCLUSÃO
+    // =========================================================
+    // 3. MOTOR FRACTAL E EXCLUSÃO DA TRINCHEIRA
+    // =========================================================
     const barraSemana = document.querySelector('.destaque-fill');
     function atualizarProgresso() {
         const checkboxes = document.querySelectorAll('.task-item input[type="checkbox"]');
@@ -72,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let concluidas = 0;
         checkboxes.forEach(box => {
-            const labelContent = box.parentElement; // Pega a div .task-content
+            const labelContent = box.parentElement; 
             if (box.checked) {
                 concluidas++;
                 labelContent.style.opacity = '0.4';
@@ -83,34 +89,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Evita divisão por zero se o usuário deletar todas as tarefas
         const total = checkboxes.length;
         const porcentagem = total > 0 ? (concluidas / total) * 100 : 0;
         barraSemana.style.width = `${porcentagem}%`;
-        salvarDados();
+        salvarTrincheira();
     }
 
-    // Escuta cliques na Trincheira (Para Marcar e Deletar)
     const painelTrincheira = document.querySelector('.trincheira-panel');
     if(painelTrincheira) {
         painelTrincheira.addEventListener('click', (e) => {
-            // Se clicou no botão de excluir
             if (e.target.classList.contains('btn-delete')) {
-                e.preventDefault(); // Evita que o clique também marque o checkbox
+                e.preventDefault(); 
                 const tarefaItem = e.target.closest('.task-item');
                 tarefaItem.remove();
-                atualizarProgresso(); // Recalcula e salva
+                atualizarProgresso(); 
             }
         });
 
         painelTrincheira.addEventListener('change', (e) => {
-            if (e.target.type === 'checkbox') {
-                atualizarProgresso();
-            }
+            if (e.target.type === 'checkbox') { atualizarProgresso(); }
         });
     }
 
-    // 4. ADICIONAR NOVA TAREFA
     const botoesAdicionar = document.querySelectorAll('.btn-add');
     botoesAdicionar.forEach(botao => {
         botao.addEventListener('click', (e) => {
@@ -142,7 +142,49 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 5. INICIALIZAÇÃO
-    carregarDados();     
+    // =========================================================
+    // 4. NOVO: SISTEMA DE MEMÓRIA E EDIÇÃO DA BÚSSOLA
+    // =========================================================
+    const titulosBussola = document.querySelectorAll('.meta-titulo');
+
+    function salvarBussola() {
+        const dadosBussola = [];
+        titulosBussola.forEach(titulo => {
+            dadosBussola.push(titulo.textContent.trim());
+        });
+        localStorage.setItem('fractal_bussola_estado', JSON.stringify(dadosBussola));
+    }
+
+    function carregarBussola() {
+        const dadosSalvos = localStorage.getItem('fractal_bussola_estado');
+        if (dadosSalvos) {
+            const dadosBussola = JSON.parse(dadosSalvos);
+            titulosBussola.forEach((titulo, index) => {
+                if(dadosBussola[index]) {
+                    titulo.textContent = dadosBussola[index];
+                }
+            });
+        }
+    }
+
+    titulosBussola.forEach(titulo => {
+        // Salva quando clica fora (perde o foco)
+        titulo.addEventListener('blur', salvarBussola);
+        
+        // Evita quebra de linha com Enter e tira o foco
+        titulo.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                titulo.blur(); 
+            }
+        });
+    });
+
+
+    // =========================================================
+    // 5. INICIALIZAÇÃO GERAL
+    // =========================================================
+    carregarTrincheira();     
+    carregarBussola(); // Carrega os textos salvos da bússola
     atualizarProgresso(); 
 });
