@@ -4,19 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>App Fractal - Produtividade</title>
-    
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0f172a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
+    <meta name="theme-color" content="#0b1120">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div id="login-screen" class="login-container">
         <div class="login-card">
-            <div class="login-icon">🏔️</div>
+            <svg class="login-icon-svg" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
             <h2>Método Fractal</h2>
             <p>Seu ecossistema de foco e longo prazo.</p>
             <button id="btn-login-google" class="btn-google">
@@ -26,87 +22,103 @@
         </div>
     </div>
 
-    <!-- PAYWALL (TRAVA DE ACESSO) -->
-    <div id="paywall-screen" class="modal-overlay hidden" style="z-index: 2500; background-color: rgba(15, 23, 42, 0.4);">
+    <div id="paywall-screen" class="modal-overlay hidden" style="z-index: 2500; background-color: rgba(11, 17, 32, 0.8);">
         <div class="modal-content" style="text-align: center; padding: 40px; align-items: center;">
-            <div class="login-icon" style="color: #f59e0b; margin-bottom: 8px;">🔒</div>
             <h2 style="color: white; margin-bottom: 12px; font-size: 1.8rem;">Acesso Exclusivo</h2>
-            <p style="color: #94a3b8; margin-bottom: 32px; font-size: 1rem; line-height: 1.5;">O App Fractal é uma ferramenta fechada para alunos. Garanta sua vaga para desbloquear o sistema de produtividade.</p>
-            <a href="#" target="_blank" class="btn-salvar" style="display: block; text-decoration: none; width: 100%; text-align: center; font-size: 1.1rem; padding: 14px;">Desbloquear Acesso Agora</a>
+            <p style="color: #94a3b8; margin-bottom: 32px; font-size: 1rem; line-height: 1.5;">Garanta sua vaga para desbloquear o sistema de produtividade.</p>
+            <a href="#" target="_blank" class="btn-salvar" style="display: block; text-decoration: none; width: 100%; text-align: center;">Desbloquear Acesso</a>
             <button id="btn-paywall-logout" class="btn-fechar-painel" style="margin-top: 16px; width: 100%; border: none;">Sair da Conta</button>
         </div>
     </div>
 
     <div id="app-dashboard" class="dashboard-container hidden">
-        <!-- MENU LATERAL -->
         <nav class="sidebar-icones">
             <div class="menu-superior">
                 <div class="icone logo" title="Menu">≡</div>
-                <div class="icone ativo" id="nav-bussola" title="Trincheira & Bússola">🧭</div>
-                <div class="icone" id="nav-vitorias" title="Cofre de Vitórias">🏆</div>
-                <div class="icone" title="Comunidade">👥</div>
+                <div class="icone ativo" id="nav-bussola" title="Trincheira & Bússola"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg></div>
+                <div class="icone" id="nav-vitorias" title="Cofre de Vitórias"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg></div>
             </div>
             <div class="menu-inferior">
                 <img id="user-avatar" src="" alt="Perfil" class="avatar-img" title="Seu Perfil">
-                <div class="icone" id="btn-sync" title="Verificar Atualizações">🔄</div>
-                <div class="icone" id="btn-logout" title="Sair do App">🚪</div>
+                <div class="icone" id="btn-sync" title="Atualizar">🔄</div>
+                <div class="icone" id="btn-logout" title="Sair">🚪</div>
             </div>
         </nav>
 
         <aside class="bussola-panel">
-            <h2 style="margin-bottom: 16px; font-size: 1.2rem; letter-spacing: 1px;">NORTE DE LONGO PRAZO</h2>
-            
-            <!-- === NOVO: SELETOR DE EIXOS === -->
             <div class="eixos-header">
-                <select id="select-eixo" class="input-eixo" title="Alternar Projeto/Eixo"></select>
-                <button id="btn-novo-eixo" class="btn-add" title="Criar Novo Eixo Estratégico">+</button>
+                <h2 style="font-size: 1rem; color: #f8fafc; letter-spacing: 1px; flex: 1;">NORTE DE LONGO PRAZO</h2>
+                <div class="botoes-eixo">
+                    <button id="btn-editar-eixo" class="btn-icon" title="Renomear Eixo">✏️</button>
+                    <button id="btn-excluir-eixo" class="btn-icon" title="Excluir Eixo">🗑️</button>
+                    <button id="btn-novo-eixo" class="btn-icon" title="Novo Eixo">+</button>
+                </div>
             </div>
+            <select id="select-eixo" class="input-eixo"></select>
 
             <div class="arvore-metas">
                 <div class="meta-item nivel-1" data-nivel="0">
-                    <div class="meta-icone">🏔️</div>
+                    <div class="meta-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m8 3 4 8 5-5 5 15H2L8 3z"></path></svg></div>
                     <div class="meta-conteudo">
-                        <span class="meta-periodo">5 ANOS</span>
+                        <div class="meta-header-row">
+                            <span class="meta-periodo">5 ANOS</span>
+                            <span class="meta-porcentagem">30%</span>
+                        </div>
                         <span class="meta-titulo">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 30%;"></div></div>
                     </div>
                 </div>
                 <div class="meta-item nivel-2" data-nivel="1">
-                    <div class="meta-icone">🎯</div>
+                    <div class="meta-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg></div>
                     <div class="meta-conteudo">
-                        <span class="meta-periodo">1 ANO</span>
+                        <div class="meta-header-row">
+                            <span class="meta-periodo">1 ANO</span>
+                            <span class="meta-porcentagem">55%</span>
+                        </div>
                         <span class="meta-titulo">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 55%;"></div></div>
                     </div>
                 </div>
                 <div class="meta-item nivel-3" data-nivel="2">
-                    <div class="meta-icone">🌗</div>
+                    <div class="meta-icone"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20a10 10 0 1 0 0-20z"></path></svg></div>
                     <div class="meta-conteudo">
-                        <span class="meta-periodo">6 MESES</span>
+                        <div class="meta-header-row">
+                            <span class="meta-periodo">6 MESES</span>
+                            <span class="meta-porcentagem">45%</span>
+                        </div>
                         <span class="meta-titulo">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 45%;"></div></div>
                     </div>
                 </div>
                 <div class="meta-item nivel-4" data-nivel="3">
-                    <div class="meta-icone">🌘</div>
+                    <div class="meta-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></div>
                     <div class="meta-conteudo">
-                        <span class="meta-periodo">3 MESES</span>
+                        <div class="meta-header-row">
+                            <span class="meta-periodo">3 MESES</span>
+                            <span class="meta-porcentagem">20%</span>
+                        </div>
                         <span class="meta-titulo">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 20%;"></div></div>
                     </div>
                 </div>
                 <div class="meta-item nivel-5" data-nivel="4">
-                    <div class="meta-icone">📅</div>
+                    <div class="meta-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
                     <div class="meta-conteudo">
-                        <span class="meta-periodo">1 MÊS</span>
+                        <div class="meta-header-row">
+                            <span class="meta-periodo">1 MÊS</span>
+                            <span class="meta-porcentagem">60%</span>
+                        </div>
                         <span class="meta-titulo">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 60%;"></div></div>
                     </div>
                 </div>
                 <div class="meta-item nivel-6 meta-ativa" data-nivel="5">
-                    <div class="meta-icone">📌</div>
+                    <div class="meta-icone" style="color: #fcd34d;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg></div>
                     <div class="meta-conteudo">
-                        <span class="meta-periodo">ESTA SEMANA</span>
+                        <div class="meta-header-row">
+                            <span class="meta-periodo" style="color: #f8fafc;">ESTA SEMANA</span>
+                            <span class="meta-porcentagem" id="porcentagem-semana">0%</span>
+                        </div>
                         <span class="meta-titulo">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill destaque-fill" style="width: 0%;"></div></div>
                     </div>
@@ -126,7 +138,7 @@
                     <div class="card">
                         <div class="card-header bg-vermelho">
                             <h3>TEMPO A - QUENTE</h3>
-                            <span class="subtitulo">FOCO TOTAL</span>
+                            <span class="subtitulo">LIGADO À SEMANA</span>
                         </div>
                         <div class="card-body">
                             <div class="task-list" id="lista-a"></div>
@@ -166,6 +178,15 @@
                     </div>
                 </div>
             </div>
+
+            <!-- NOVO: BARRA DE PROGRESSO DIÁRIA -->
+            <div class="painel-progresso-hoje">
+                <div class="progresso-header">
+                    <h3>PROGRESSE HOJE:</h3>
+                    <span id="texto-progresso-hoje">0/0 TAREFAS CONCLUÍDAS (0%)</span>
+                </div>
+                <div class="progress-track" style="height: 8px;"><div id="barra-progresso-hoje" class="progress-fill" style="width: 0%;"></div></div>
+            </div>
         </main>
 
         <!-- PAINEL DIREITO 2: O Canvas de Planejamento -->
@@ -176,13 +197,13 @@
                     <h1 id="plan-titulo">Planejamento</h1>
                     <p id="plan-contexto-pai" class="contexto-pai">Alimenta: [Meta Superior]</p>
                 </div>
-                <button id="btn-fechar-planejamento" class="btn-fechar-painel" title="Voltar para a Trincheira">✕ Voltar ao Hoje</button>
+                <button id="btn-fechar-planejamento" class="btn-fechar-painel">✕ Voltar ao Hoje</button>
             </div>
             <div class="body-planejamento">
                 <label>Objetivo Principal (Título da Meta):</label>
                 <input type="text" id="plan-input-meta" class="input-grande" placeholder="Escreva a meta principal com clareza...">
                 <label style="margin-top: 24px;">Anotações, Estratégias e Recursos:</label>
-                <textarea id="plan-input-notas" class="textarea-gigante" placeholder="Despeje aqui suas ideias, mapeamento, links importantes e tudo que você precisa para alcançar este nível..."></textarea>
+                <textarea id="plan-input-notas" class="textarea-gigante" placeholder="Despeje aqui suas ideias e mapeamento..."></textarea>
                 <div class="alerta-desdobramento">
                     <strong>Próximo passo estratégico:</strong> 
                     <span id="plan-dica-filho">Dica de desdobramento.</span>
@@ -200,9 +221,7 @@
                 </div>
             </div>
             <div class="body-planejamento">
-                <div id="lista-vitorias" class="historico-container">
-                    <!-- As vitórias arquivadas entrarão aqui via JS -->
-                </div>
+                <div id="lista-vitorias" class="historico-container"></div>
             </div>
         </section>
 
