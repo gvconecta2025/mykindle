@@ -19,10 +19,8 @@ const db = getFirestore(app);
 let usuarioLogado = null;
 let acessoPermitido = false; 
 let historicoVitoriasGlobais = []; 
-
-// === NOVO: SISTEMA DE EIXOS (MÚLTIPLAS BÚSSOLAS) ===
 let eixosGlobais = [];
-let eixoAtivoIndex = 0; // Aponta para qual eixo está sendo visualizado agora
+let eixoAtivoIndex = 0; 
 
 // =========================================================
 // 1. O RELÓGIO E AUTENTICAÇÃO
@@ -84,7 +82,6 @@ function verificarAcessoVisual(temAcesso) {
 async function salvarNaNuvem() {
     if (!usuarioLogado || !acessoPermitido) return;
 
-    // Coleta a Trincheira (Global)
     const listas = document.querySelectorAll('.task-list');
     const dadosTrincheira = [];
     listas.forEach((lista) => {
@@ -99,13 +96,22 @@ async function salvarNaNuvem() {
 
     try {
         await setDoc(doc(db, "usuarios", usuarioLogado.uid), {
-            eixosGlobais: eixosGlobais, // Salva o array de objetos dos Eixos
+            eixosGlobais: eixosGlobais,
             eixoAtivoIndex: eixoAtivoIndex,
             trincheira: dadosTrincheira,
             historico: historicoVitoriasGlobais,
             ultimaAtualizacao: new Date().toISOString()
         }, { merge: true });
     } catch (e) { console.error("Erro Nuvem: ", e); }
+}
+
+function criarEixoInicial() {
+    eixosGlobais = [{
+        nome: "Eixo Principal",
+        bussola: ["Sua grande visão em 5 anos...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta..."],
+        bussolaNotas: ["", "", "", "", "", ""]
+    }];
+    eixoAtivoIndex = 0;
 }
 
 async function puxarDadosDaNuvem() {
@@ -117,12 +123,10 @@ async function puxarDadosDaNuvem() {
             const dados = docSnap.data();
             verificarAcessoVisual(dados.acessoLiberado === true);
 
-            // LOGICA DE MIGRAÇÃO: Suporte a dados antigos e novos
             if (dados.eixosGlobais) {
                 eixosGlobais = dados.eixosGlobais;
                 eixoAtivoIndex = dados.eixoAtivoIndex !== undefined ? dados.eixoAtivoIndex : 0;
             } else if (dados.bussola) {
-                // Migrando o usuário antigo para o formato de Eixos
                 eixosGlobais = [{
                     nome: "Eixo Principal",
                     bussola: dados.bussola,
@@ -130,7 +134,6 @@ async function puxarDadosDaNuvem() {
                 }];
                 eixoAtivoIndex = 0;
             } else {
-                // Conta Zerada mas que já tem doc no banco
                 criarEixoInicial();
             }
 
@@ -145,14 +148,17 @@ async function puxarDadosDaNuvem() {
                         dados.trincheira[index].forEach(tarefa => {
                             const novaLabel = document.createElement('label');
                             novaLabel.className = 'task-item';
-                            const opacidade = tarefa.concluido ? '0.4' : '1';
-                            const risco = tarefa.concluido ? 'line-through' : 'none';
+                            const opacity = tarefa.concluido ? '0.5' : '1';
+                            const decoration = tarefa.concluido ? 'line-through' : 'none';
+                            
+                            // NOVO HTML DA CHECKBOX (Custom CSS)
                             novaLabel.innerHTML = `
-                                <div class="task-content" style="opacity: ${opacidade}; text-decoration: ${risco};">
+                                <div class="task-content">
                                     <input type="checkbox" ${tarefa.concluido ? 'checked' : ''}> 
-                                    <span class="task-text">${tarefa.texto}</span>
+                                    <span class="checkmark"></span>
+                                    <span class="task-text" style="opacity: ${opacity}; text-decoration: ${decoration};">${tarefa.texto}</span>
                                 </div>
-                                <button class="btn-delete" title="Excluir">×</button>
+                                <button class="btn-delete" title="Excluir">🗑️</button>
                             `;
                             lista.appendChild(novaLabel);
                         });
@@ -164,29 +170,19 @@ async function puxarDadosDaNuvem() {
             criarEixoInicial();
             renderizarSeletorEixos();
             carregarBussolaVisual();
-            
-            await setDoc(doc(db, "usuarios", usuarioLogado.uid), {
-                acessoLiberado: false, emailOrigem: usuarioLogado.email, dataCriacao: new Date().toISOString(), eixosGlobais: eixosGlobais, eixoAtivoIndex: 0
-            });
+            await setDoc(doc(db, "usuarios", usuarioLogado.uid), { acessoLiberado: false, emailOrigem: usuarioLogado.email, eixosGlobais: eixosGlobais, eixoAtivoIndex: 0 });
         }
         atualizarProgressoTrincheira();
     } catch (e) { console.error("Erro puxar dados: ", e); }
 }
 
-function criarEixoInicial() {
-    eixosGlobais = [{
-        nome: "Eixo Principal",
-        bussola: ["Sua grande visão em 5 anos...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta..."],
-        bussolaNotas: ["", "", "", "", "", ""]
-    }];
-    eixoAtivoIndex = 0;
-}
-
 // =========================================================
-// 3. UI DOS EIXOS PARALELOS
+// 3. UI DOS EIXOS PARALELOS (NOVO: Editar e Excluir)
 // =========================================================
 const selectEixo = document.getElementById('select-eixo');
 const btnNovoEixo = document.getElementById('btn-novo-eixo');
+const btnEditarEixo = document.getElementById('btn-editar-eixo');
+const btnExcluirEixo = document.getElementById('btn-excluir-eixo');
 
 function renderizarSeletorEixos() {
     selectEixo.innerHTML = '';
@@ -207,32 +203,62 @@ function carregarBussolaVisual() {
     });
 }
 
-// Quando muda o select, recarrega a tela
 selectEixo.addEventListener('change', (e) => {
     eixoAtivoIndex = parseInt(e.target.value);
     carregarBussolaVisual();
-    salvarNaNuvem(); // Memoriza a última aba aberta
+    salvarNaNuvem(); 
 });
 
-// Adicionar novo eixo (Projeto paralelo)
 btnNovoEixo.addEventListener('click', () => {
-    const nomeNovoEixo = prompt("Nome do novo Eixo Estratégico (Ex: Concurso, Empresa, etc):");
-    if (nomeNovoEixo && nomeNovoEixo.trim() !== "") {
+    const nomeNovo = prompt("Nome do novo Eixo (Ex: Empresa, Concurso):");
+    if (nomeNovo && nomeNovo.trim() !== "") {
         eixosGlobais.push({
-            nome: nomeNovoEixo.trim(),
+            nome: nomeNovo.trim(),
             bussola: ["Sua grande visão em 5 anos...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta..."],
             bussolaNotas: ["", "", "", "", "", ""]
         });
-        eixoAtivoIndex = eixosGlobais.length - 1; // Já muda pra ele
+        eixoAtivoIndex = eixosGlobais.length - 1; 
         renderizarSeletorEixos();
         carregarBussolaVisual();
         salvarNaNuvem();
     }
 });
 
+btnEditarEixo.addEventListener('click', () => {
+    if(eixosGlobais.length === 0) return;
+    const nomeAtual = eixosGlobais[eixoAtivoIndex].nome;
+    const novoNome = prompt(`Renomear o eixo "${nomeAtual}" para:`, nomeAtual);
+    if (novoNome && novoNome.trim() !== "" && novoNome !== nomeAtual) {
+        eixosGlobais[eixoAtivoIndex].nome = novoNome.trim();
+        renderizarSeletorEixos();
+        salvarNaNuvem();
+    }
+});
+
+btnExcluirEixo.addEventListener('click', () => {
+    if(eixosGlobais.length === 0) return;
+    const nomeAtual = eixosGlobais[eixoAtivoIndex].nome;
+    const confirma = confirm(`Tem certeza que deseja apagar todo o eixo "${nomeAtual}" e suas metas de longo prazo?`);
+    
+    if (confirma) {
+        eixosGlobais.splice(eixoAtivoIndex, 1); // Remove o eixo
+        
+        // Se apagou o último eixo, cria um vazio para não bugar o app
+        if(eixosGlobais.length === 0) {
+            criarEixoInicial();
+        } else {
+            // Volta para o índice 0 por segurança
+            eixoAtivoIndex = 0;
+        }
+        
+        renderizarSeletorEixos();
+        carregarBussolaVisual();
+        salvarNaNuvem();
+    }
+});
 
 // =========================================================
-// 4. NAVEGAÇÃO E PAINÉIS 
+// 4. MODAL DE PLANEJAMENTO 
 // =========================================================
 const painelTrincheira = document.getElementById('painel-trincheira');
 const painelPlanejamento = document.getElementById('painel-planejamento');
@@ -257,9 +283,6 @@ navVitorias.addEventListener('click', () => {
     renderizarHistorico(); 
 });
 
-// =========================================================
-// 5. MODAL DE PLANEJAMENTO (Vinculado ao Eixo Ativo)
-// =========================================================
 const planBadge = document.getElementById('plan-badge-periodo');
 const planContextoPai = document.getElementById('plan-contexto-pai');
 const planInputMeta = document.getElementById('plan-input-meta');
@@ -291,8 +314,7 @@ document.querySelectorAll('.meta-item').forEach(item => {
             textoPaiReal = `Alimenta: "${eixoAtual.bussola[nivelAtualEditando - 1]}"`;
         }
         
-        planBadge.getContext = `PLANEJAMENTO: ${configFase.periodo}`; // Correção visual
-        planBadge.textContent = `PLANEJAMENTO: ${configFase.periodo} - [${eixoAtual.nome.toUpperCase()}]`; // Mostra no título qual eixo está editando
+        planBadge.textContent = `PLANEJAMENTO: ${configFase.periodo} - [${eixoAtual.nome.toUpperCase()}]`;
         planContextoPai.textContent = textoPaiReal;
         
         const tituloAtual = eixoAtual.bussola[nivelAtualEditando];
@@ -310,12 +332,11 @@ document.getElementById('btn-fechar-planejamento').addEventListener('click', () 
     if (nivelAtualEditando > -1) {
         const novoTexto = planInputMeta.value.trim();
         if (novoTexto !== "") {
-            // Salva no objeto JavaScript em vez de ler da tela
             eixosGlobais[eixoAtivoIndex].bussola[nivelAtualEditando] = novoTexto;
         }
         eixosGlobais[eixoAtivoIndex].bussolaNotas[nivelAtualEditando] = planInputNotas.value;
         
-        carregarBussolaVisual(); // Reflete a mudança na barra lateral
+        carregarBussolaVisual(); 
         salvarNaNuvem();
     }
     document.querySelectorAll('.meta-item').forEach(i => i.classList.remove('selecionado'));
@@ -323,32 +344,47 @@ document.getElementById('btn-fechar-planejamento').addEventListener('click', () 
     navBussola.click(); 
 });
 
-
 // =========================================================
-// 6. MOTOR DA TRINCHEIRA E ARQUIVAMENTO
+// 5. MOTOR DA TRINCHEIRA & BARRA DIÁRIA
 // =========================================================
 const barraSemana = document.querySelector('.destaque-fill');
+const porcSemana = document.getElementById('porcentagem-semana');
+
+// Novo: Elementos do Progresso Diário
+const textoProgressoHoje = document.getElementById('texto-progresso-hoje');
+const barraProgressoHoje = document.getElementById('barra-progresso-hoje');
 
 function atualizarProgressoTrincheira() {
     const checkboxes = document.querySelectorAll('.task-item input[type="checkbox"]');
-    if (!barraSemana) return;
-
+    
     let concluidas = 0;
     checkboxes.forEach(box => {
-        const labelContent = box.parentElement; 
+        const textoLabel = box.parentElement.querySelector('.task-text'); 
         if (box.checked) {
             concluidas++;
-            labelContent.style.opacity = '0.4';
-            labelContent.style.textDecoration = 'line-through';
+            textoLabel.style.opacity = '0.5';
+            textoLabel.style.textDecoration = 'line-through';
         } else {
-            labelContent.style.opacity = '1';
-            labelContent.style.textDecoration = 'none';
+            textoLabel.style.opacity = '1';
+            textoLabel.style.textDecoration = 'none';
         }
     });
 
     const total = checkboxes.length;
-    const porcentagem = total > 0 ? (concluidas / total) * 100 : 0;
-    barraSemana.style.width = `${porcentagem}%`;
+    const porcentagem = total > 0 ? Math.round((concluidas / total) * 100) : 0;
+    
+    // Atualiza a barra da semana na Bússola
+    if (barraSemana && porcSemana) {
+        barraSemana.style.width = `${porcentagem}%`;
+        porcSemana.textContent = `${porcentagem}%`;
+    }
+
+    // Atualiza a barra do "PROGRESSE HOJE"
+    if (textoProgressoHoje && barraProgressoHoje) {
+        textoProgressoHoje.textContent = `${concluidas}/${total} TAREFAS CONCLUÍDAS (${porcentagem}%)`;
+        barraProgressoHoje.style.width = `${porcentagem}%`;
+    }
+
     salvarNaNuvem();
 }
 
@@ -410,11 +446,15 @@ document.querySelectorAll('.btn-add').forEach(botao => {
         if (textoTarefa !== '') {
             const novaLabel = document.createElement('label');
             novaLabel.className = 'task-item';
+            
+            // Cria a tarefa com o novo HTML customizado
             novaLabel.innerHTML = `
                 <div class="task-content">
-                    <input type="checkbox"> <span class="task-text">${textoTarefa}</span>
+                    <input type="checkbox"> 
+                    <span class="checkmark"></span>
+                    <span class="task-text">${textoTarefa}</span>
                 </div>
-                <button class="btn-delete" title="Excluir">×</button>
+                <button class="btn-delete" title="Excluir">🗑️</button>
             `;
             taskList.appendChild(novaLabel);
             inputField.value = '';
