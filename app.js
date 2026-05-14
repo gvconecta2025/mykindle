@@ -123,11 +123,13 @@ async function puxarDadosDaNuvem() {
                         dados.trincheira[index].forEach(tarefa => {
                             const novaLabel = document.createElement('label');
                             novaLabel.className = 'task-item';
+                            const opacity = tarefa.concluido ? '0.5' : '1';
+                            const decoration = tarefa.concluido ? 'line-through' : 'none';
                             novaLabel.innerHTML = `
                                 <div class="task-content">
                                     <input type="checkbox" ${tarefa.concluido ? 'checked' : ''}> 
                                     <span class="checkmark"></span>
-                                    <span class="task-text">${tarefa.texto}</span>
+                                    <span class="task-text" style="opacity: ${opacity}; text-decoration: ${decoration};">${tarefa.texto}</span>
                                 </div>
                                 <button class="btn-delete" title="Excluir">🗑️</button>
                             `;
@@ -202,10 +204,8 @@ let nivelAtualEditando = -1;
 
 document.querySelectorAll('.meta-item').forEach(item => {
     item.addEventListener('click', () => {
-        // GERENCIAR SELEÇÃO E BRILHO
         document.querySelectorAll('.meta-item').forEach(i => i.classList.remove('selecionado'));
         item.classList.add('selecionado');
-
         nivelAtualEditando = parseInt(item.getAttribute('data-nivel'));
         const eixoAtual = eixosGlobais[eixoAtivoIndex];
         const config = ["5 ANOS", "1 ANO", "6 MESES", "3 MESES", "1 MÊS", "ESTA SEMANA"];
