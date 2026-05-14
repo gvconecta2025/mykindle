@@ -7,15 +7,13 @@
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="dashboard-container">
-        <!-- MENU LATERAL (Ou Inferior no Mobile) -->
+        <!-- MENU LATERAL -->
         <nav class="sidebar-icones">
             <div class="menu-superior">
                 <div class="icone logo" title="Menu">≡</div>
@@ -38,7 +36,7 @@
                     <div class="meta-icone">🏔️</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">5 ANOS</span>
-                        <span class="meta-titulo">Independência Digital</span>
+                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Independência Digital</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 30%;"></div></div>
                     </div>
                 </div>
@@ -46,7 +44,7 @@
                     <div class="meta-icone">🎯</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">1 ANO</span>
-                        <span class="meta-titulo">Lançar 3 Livros e o App</span>
+                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Lançar 3 Livros e o App</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 55%;"></div></div>
                     </div>
                 </div>
@@ -54,7 +52,7 @@
                     <div class="meta-icone">🌗</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">6 MESES</span>
-                        <span class="meta-titulo">Escrever 2 Livros</span>
+                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Escrever 2 Livros</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 45%;"></div></div>
                     </div>
                 </div>
@@ -62,7 +60,7 @@
                     <div class="meta-icone">🌘</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">3 MESES</span>
-                        <span class="meta-titulo">Livro 1: Marketing e Rotina</span>
+                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Livro 1: Marketing e Rotina</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 20%;"></div></div>
                     </div>
                 </div>
@@ -70,7 +68,7 @@
                     <div class="meta-icone">📅</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">1 MÊS</span>
-                        <span class="meta-titulo">Escrever e Revisar Conteúdo</span>
+                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Escrever e Revisar Conteúdo</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 60%;"></div></div>
                     </div>
                 </div>
@@ -78,7 +76,7 @@
                     <div class="meta-icone">📌</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">ESTA SEMANA</span>
-                        <span class="meta-titulo">Conteúdo Cap. 4</span>
+                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Conteúdo Cap. 4</span>
                         <div class="progress-track"><div class="progress-fill destaque-fill" style="width: 15%;"></div></div>
                     </div>
                 </div>
@@ -89,28 +87,14 @@
         <main class="trincheira-panel">
             <h1 style="margin-bottom: 24px;">HOJE: QUARTA-FEIRA</h1>
             <div class="grid-temperaturas">
-                <!-- Coluna Principal (Tempo A) -->
                 <div class="coluna-a">
                     <div class="card">
                         <div class="card-header bg-vermelho">
                             <h3>TEMPO A - QUENTE</h3>
-                            <span class="subtitulo">LIGADO À SEMANA: Escrever Cap 4</span>
+                            <span class="subtitulo">FOCO TOTAL</span>
                         </div>
                         <div class="card-body">
-                            <div class="task-list">
-                                <label class="task-item">
-                                    <div class="task-content">
-                                        <input type="checkbox" checked> <span class="task-text">Gravar Vídeo B-roll Cap 4</span>
-                                    </div>
-                                    <button class="btn-delete" title="Excluir">×</button>
-                                </label>
-                                <label class="task-item">
-                                    <div class="task-content">
-                                        <input type="checkbox" checked> <span class="task-text">Revisar Pág 15-20</span>
-                                    </div>
-                                    <button class="btn-delete" title="Excluir">×</button>
-                                </label>
-                            </div>
+                            <div class="task-list"></div>
                             <div class="add-task-form">
                                 <input type="text" placeholder="Adicionar foco total..." class="input-tarefa">
                                 <button class="btn-add">+</button>
@@ -118,8 +102,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Coluna Secundária (Tempo B e C) -->
                 <div class="coluna-bc">
                     <div class="card mb-20">
                         <div class="card-header bg-laranja">
@@ -127,35 +109,20 @@
                             <span class="subtitulo">MANUTENÇÃO</span>
                         </div>
                         <div class="card-body">
-                            <div class="task-list">
-                                <label class="task-item">
-                                    <div class="task-content">
-                                        <input type="checkbox"> <span class="task-text">Responder E-mails urgentes</span>
-                                    </div>
-                                    <button class="btn-delete" title="Excluir">×</button>
-                                </label>
-                            </div>
+                            <div class="task-list"></div>
                             <div class="add-task-form">
                                 <input type="text" placeholder="Adicionar manutenção..." class="input-tarefa">
                                 <button class="btn-add">+</button>
                             </div>
                         </div>
                     </div>
-
                     <div class="card">
                         <div class="card-header bg-azul">
                             <h3>TEMPO C - FRIO</h3>
                             <span class="subtitulo">OPCIONAL</span>
                         </div>
                         <div class="card-body">
-                            <div class="task-list">
-                                <label class="task-item">
-                                    <div class="task-content">
-                                        <input type="checkbox"> <span class="task-text">Pesquisar referências visuais</span>
-                                    </div>
-                                    <button class="btn-delete" title="Excluir">×</button>
-                                </label>
-                            </div>
+                            <div class="task-list"></div>
                             <div class="add-task-form">
                                 <input type="text" placeholder="Adicionar opcional..." class="input-tarefa">
                                 <button class="btn-add">+</button>
