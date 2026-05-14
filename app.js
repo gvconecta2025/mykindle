@@ -17,6 +17,9 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 let usuarioLogado = null;
 
+// Matriz global para segurar as anotações profundas da Bússola na memória
+let notasGlobaisBussola = ["", "", "", "", "", ""];
+
 // =========================================================
 // 1. O RELÓGIO E AUTENTICAÇÃO
 // =========================================================
@@ -79,6 +82,7 @@ async function salvarNaNuvem() {
     try {
         await setDoc(doc(db, "usuarios", usuarioLogado.uid), {
             bussola: dadosBussola,
+            bussolaNotas: notasGlobaisBussola, // Salva as anotações longas
             trincheira: dadosTrincheira,
             ultimaAtualizacao: new Date().toISOString()
         }, { merge: true });
@@ -95,6 +99,9 @@ async function puxarDadosDaNuvem() {
                 document.querySelectorAll('.meta-titulo').forEach((titulo, index) => {
                     if (dados.bussola[index]) titulo.textContent = dados.bussola[index];
                 });
+            }
+            if (dados.bussolaNotas) {
+                notasGlobaisBussola = dados.bussolaNotas;
             }
             if (dados.trincheira) {
                 document.querySelectorAll('.task-list').forEach((lista, index) => {
@@ -127,20 +134,20 @@ async function puxarDadosDaNuvem() {
 }
 
 // =========================================================
-// 3. NOVO: LÓGICA DA SALA DE GUERRA (MODAL DE PLANEJAMENTO)
+// 3. CANVAS DE PLANEJAMENTO (SOBREPOSIÇÃO)
 // =========================================================
-const modalPlanejamento = document.getElementById('modal-planejamento');
-const btnFecharModal = document.getElementById('btn-fechar-modal');
-const btnSalvarModal = document.getElementById('btn-salvar-planejamento');
+const painelTrincheira = document.getElementById('painel-trincheira');
+const painelPlanejamento = document.getElementById('painel-planejamento');
+const btnFecharPlanejamento = document.getElementById('btn-fechar-planejamento');
 
-const modalBadge = document.getElementById('modal-badge-periodo');
-const modalContextoPai = document.getElementById('modal-contexto-pai');
-const modalInputMeta = document.getElementById('modal-input-meta');
-const modalDicaFilho = document.getElementById('modal-dica-filho');
+const planBadge = document.getElementById('plan-badge-periodo');
+const planContextoPai = document.getElementById('plan-contexto-pai');
+const planInputMeta = document.getElementById('plan-input-meta');
+const planInputNotas = document.getElementById('plan-input-notas');
+const planDicaFilho = document.getElementById('plan-dica-filho');
 
-let nivelAtualEditando = -1; // Guarda qual caixa da bússola abriu o modal
+let nivelAtualEditando = -1; 
 
-// Dicionário do Método Fractal: Explica as conexões entre os níveis
 const fractalMapeamento = [
     { periodo: "5 ANOS", pai: "Este é o seu Norte Estelar Supremo. O ápice da montanha.", filho: "Você desdobrará isso em 5 metas anuais consistentes." },
     { periodo: "1 ANO", pai: "A Meta de 5 Anos", filho: "Para bater este ano, você o dividirá em 2 Grandes Semestres (6 meses)." },
@@ -150,58 +157,62 @@ const fractalMapeamento = [
     { periodo: "ESTA SEMANA", pai: "O Objetivo do Mês", filho: "Você vai fatiar esta meta em tarefas diárias na sua Trincheira." }
 ];
 
-// Quando o usuário clica em qualquer card da bússola
+// Abrir o Planejamento ao clicar na Bússola
 document.querySelectorAll('.meta-item').forEach(item => {
     item.addEventListener('click', () => {
+        // Remove destaque de todos e adiciona no clicado
+        document.querySelectorAll('.meta-item').forEach(i => i.classList.remove('selecionado'));
+        item.classList.add('selecionado');
+
         const nivelStr = item.getAttribute('data-nivel');
         nivelAtualEditando = parseInt(nivelStr);
         
         const configFase = fractalMapeamento[nivelAtualEditando];
         const tituloAtual = item.querySelector('.meta-titulo').textContent;
         
-        // Pega o título real da meta pai para dar mais clareza, se não for o topo
         let textoPaiReal = configFase.pai;
         if (nivelAtualEditando > 0) {
             const paineis = document.querySelectorAll('.meta-titulo');
             textoPaiReal = `Alimenta: "${paineis[nivelAtualEditando - 1].textContent}"`;
         }
         
-        // Preenche os dados do Modal
-        modalBadge.textContent = `PLANEJAMENTO: ${configFase.periodo}`;
-        modalContextoPai.textContent = textoPaiReal;
-        modalInputMeta.value = tituloAtual === "Defina sua meta..." ? "" : tituloAtual;
-        modalDicaFilho.textContent = configFase.filho;
+        // Preenche o painel de planejamento
+        planBadge.textContent = `PLANEJAMENTO: ${configFase.periodo}`;
+        planContextoPai.textContent = textoPaiReal;
+        planInputMeta.value = tituloAtual === "Defina sua meta..." ? "" : tituloAtual;
+        planInputNotas.value = notasGlobaisBussola[nivelAtualEditando] || ""; // Carrega a anotação salva
+        planDicaFilho.textContent = configFase.filho;
         
-        // Abre o Modal
-        modalPlanejamento.classList.remove('hidden');
-        modalInputMeta.focus();
+        // Efeito de transição de telas
+        painelTrincheira.classList.add('hidden');
+        painelPlanejamento.classList.remove('hidden');
     });
 });
 
-// Fechar Modal
-function fecharModal() {
-    modalPlanejamento.classList.add('hidden');
+// Fechar Planejamento e Voltar para Trincheira
+function fecharPlanejamento() {
+    // 1. Salva o que foi digitado na interface lateral
+    if (nivelAtualEditando > -1) {
+        const novoTexto = planInputMeta.value.trim();
+        if (novoTexto !== "") {
+            const paineis = document.querySelectorAll('.meta-item');
+            paineis[nivelAtualEditando].querySelector('.meta-titulo').textContent = novoTexto;
+        }
+        // Atualiza a matriz global de notas
+        notasGlobaisBussola[nivelAtualEditando] = planInputNotas.value;
+        
+        // Manda pro Firebase
+        salvarNaNuvem();
+    }
+
+    // 2. Tira seleção e inverte as telas
+    document.querySelectorAll('.meta-item').forEach(i => i.classList.remove('selecionado'));
+    painelPlanejamento.classList.add('hidden');
+    painelTrincheira.classList.remove('hidden');
     nivelAtualEditando = -1;
 }
 
-btnFecharModal.addEventListener('click', fecharModal);
-
-// Salvar Modal
-btnSalvarModal.addEventListener('click', () => {
-    if (nivelAtualEditando > -1) {
-        const novoTexto = modalInputMeta.value.trim();
-        if (novoTexto !== "") {
-            // Atualiza o texto na bússola visualmente
-            const paineis = document.querySelectorAll('.meta-item');
-            paineis[nivelAtualEditando].querySelector('.meta-titulo').textContent = novoTexto;
-            
-            // Salva no banco de dados
-            salvarNaNuvem();
-        }
-    }
-    fecharModal();
-});
-
+btnFecharPlanejamento.addEventListener('click', fecharPlanejamento);
 
 // =========================================================
 // 4. MOTOR DA TRINCHEIRA
@@ -242,7 +253,6 @@ if (btnVarrer) {
     });
 }
 
-const painelTrincheira = document.querySelector('.trincheira-panel');
 if(painelTrincheira) {
     painelTrincheira.addEventListener('click', (e) => {
         if (e.target.classList.contains('btn-delete')) {
