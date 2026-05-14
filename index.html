@@ -32,7 +32,6 @@
     </div>
 
     <div id="app-dashboard" class="dashboard-container hidden">
-        
         <nav class="sidebar-icones">
             <div class="menu-superior">
                 <div class="icone logo" title="Menu">≡</div>
@@ -58,7 +57,6 @@
             <select id="select-eixo" class="input-eixo"></select>
 
             <div class="arvore-metas">
-                
                 <div class="meta-item nivel-1" data-nivel="0">
                     <div class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
                     <div class="meta-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m8 3 4 8 5-5 5 15H2L8 3z"></path></svg></div>
@@ -68,7 +66,6 @@
                         <div class="progress-track"><div class="progress-fill" style="width: 30%;"></div></div>
                     </div>
                 </div>
-
                 <div class="meta-item nivel-2" data-nivel="1">
                     <div class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
                     <div class="meta-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg></div>
@@ -78,7 +75,6 @@
                         <div class="progress-track"><div class="progress-fill" style="width: 55%;"></div></div>
                     </div>
                 </div>
-
                 <div class="meta-item nivel-3" data-nivel="2">
                     <div class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
                     <div class="meta-icone"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20a10 10 0 1 0 0-20z"></path></svg></div>
@@ -88,7 +84,6 @@
                         <div class="progress-track"><div class="progress-fill" style="width: 45%;"></div></div>
                     </div>
                 </div>
-
                 <div class="meta-item nivel-4" data-nivel="3">
                     <div class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
                     <div class="meta-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></div>
@@ -98,7 +93,6 @@
                         <div class="progress-track"><div class="progress-fill" style="width: 20%;"></div></div>
                     </div>
                 </div>
-
                 <div class="meta-item nivel-5" data-nivel="4">
                     <div class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
                     <div class="meta-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
@@ -108,7 +102,6 @@
                         <div class="progress-track"><div class="progress-fill" style="width: 60%;"></div></div>
                     </div>
                 </div>
-
                 <div class="meta-item nivel-6 meta-ativa" data-nivel="5">
                     <div class="chevron" style="visibility: hidden;"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
                     <div class="meta-icone" style="color: #fcd34d;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg></div>
@@ -118,7 +111,6 @@
                         <div class="progress-track"><div class="progress-fill destaque-fill" style="width: 0%;"></div></div>
                     </div>
                 </div>
-
             </div>
         </aside>
 
@@ -127,98 +119,42 @@
                 <h1 id="data-hoje">HOJE</h1>
                 <button id="btn-varrer" class="btn-varrer" title="Arquivar tarefas marcadas">🧹 Varrer Concluídas</button>
             </div>
-
             <div class="grid-temperaturas">
                 <div class="coluna-a">
-                    <div class="card">
-                        <div class="card-header bg-vermelho">
-                            <h3>TEMPO A - QUENTE</h3>
-                            <span class="subtitulo">LIGADO À SEMANA</span>
-                        </div>
-                        <div class="card-body">
-                            <div class="task-list" id="lista-a"></div>
-                            <div class="add-task-form">
-                                <input type="text" placeholder="Adicionar foco total..." class="input-tarefa">
-                                <button class="btn-add">+</button>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="card"><div class="card-header bg-vermelho"><h3>TEMPO A - QUENTE</h3><span class="subtitulo">LIGADO À SEMANA</span></div>
+                    <div class="card-body"><div class="task-list" id="lista-a"></div><div class="add-task-form"><input type="text" placeholder="Adicionar foco total..." class="input-tarefa"><button class="btn-add">+</button></div></div></div>
                 </div>
                 <div class="coluna-bc">
-                    <div class="card mb-20">
-                        <div class="card-header bg-laranja">
-                            <h3>TEMPO B - MORNO</h3>
-                            <span class="subtitulo">MANUTENÇÃO</span>
-                        </div>
-                        <div class="card-body">
-                            <div class="task-list" id="lista-b"></div>
-                            <div class="add-task-form">
-                                <input type="text" placeholder="Adicionar manutenção..." class="input-tarefa">
-                                <button class="btn-add">+</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header bg-azul">
-                            <h3>TEMPO C - FRIO</h3>
-                            <span class="subtitulo">OPCIONAL</span>
-                        </div>
-                        <div class="card-body">
-                            <div class="task-list" id="lista-c"></div>
-                            <div class="add-task-form">
-                                <input type="text" placeholder="Adicionar opcional..." class="input-tarefa">
-                                <button class="btn-add">+</button>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="card mb-20"><div class="card-header bg-laranja"><h3>TEMPO B - MORNO</h3><span class="subtitulo">MANUTENÇÃO</span></div>
+                    <div class="card-body"><div class="task-list" id="lista-b"></div><div class="add-task-form"><input type="text" placeholder="Adicionar manutenção..." class="input-tarefa"><button class="btn-add">+</button></div></div></div>
+                    <div class="card"><div class="card-header bg-azul"><h3>TEMPO C - FRIO</h3><span class="subtitulo">OPCIONAL</span></div>
+                    <div class="card-body"><div class="task-list" id="lista-c"></div><div class="add-task-form"><input type="text" placeholder="Adicionar opcional..." class="input-tarefa"><button class="btn-add">+</button></div></div></div>
                 </div>
             </div>
-
             <div class="painel-progresso-hoje">
-                <div class="progresso-header">
-                    <h3>PROGRESSE HOJE:</h3>
-                    <span id="texto-progresso-hoje">0/0 TAREFAS CONCLUÍDAS (0%)</span>
-                </div>
+                <div class="progresso-header"><h3>PROGRESSE HOJE:</h3><span id="texto-progresso-hoje">0/0 TAREFAS CONCLUÍDAS (0%)</span></div>
                 <div class="progress-track" style="height: 8px;"><div id="barra-progresso-hoje" class="progress-fill" style="width: 0%;"></div></div>
             </div>
         </main>
 
         <section id="painel-planejamento" class="planejamento-panel hidden">
             <div class="header-planejamento">
-                <div>
-                    <span id="plan-badge-periodo" class="badge">PERÍODO</span>
-                    <h1 id="plan-titulo">Planejamento</h1>
-                    <p id="plan-contexto-pai" class="contexto-pai">Alimenta: [Meta Superior]</p>
-                </div>
+                <div><span id="plan-badge-periodo" class="badge">PERÍODO</span><h1 id="plan-titulo">Planejamento</h1><p id="plan-contexto-pai" class="contexto-pai">Alimenta: [Meta Superior]</p></div>
                 <button id="btn-fechar-planejamento" class="btn-fechar-painel">✕ Voltar ao Hoje</button>
             </div>
             <div class="body-planejamento">
-                <label>Objetivo Principal (Título da Meta):</label>
-                <input type="text" id="plan-input-meta" class="input-grande" placeholder="Escreva a meta principal com clareza...">
-                <label style="margin-top: 24px;">Anotações, Estratégias e Recursos:</label>
-                <textarea id="plan-input-notas" class="textarea-gigante" placeholder="Despeje aqui suas ideias e mapeamento..."></textarea>
-                <div class="alerta-desdobramento">
-                    <strong>Próximo passo estratégico:</strong> 
-                    <span id="plan-dica-filho">Dica de desdobramento.</span>
-                </div>
+                <label>Objetivo Principal (Título da Meta):</label><input type="text" id="plan-input-meta" class="input-grande" placeholder="Escreva a meta principal com clareza...">
+                <label style="margin-top: 24px;">Anotações, Estratégias e Recursos:</label><textarea id="plan-input-notas" class="textarea-gigante" placeholder="Despeje aqui suas ideias e mapeamento..."></textarea>
+                <div class="alerta-desdobramento"><strong>Próximo passo estratégico:</strong> <span id="plan-dica-filho">Dica de desdobramento.</span></div>
             </div>
         </section>
 
         <section id="painel-vitorias" class="planejamento-panel hidden">
-            <div class="header-planejamento">
-                <div>
-                    <span class="badge" style="background-color: #f59e0b;">ARQUIVO</span>
-                    <h1 style="color: #f8fafc; font-size: 2rem; margin: 8px 0;">Cofre de Vitórias</h1>
-                    <p class="contexto-pai">O registro imutável da sua disciplina diária.</p>
-                </div>
-            </div>
-            <div class="body-planejamento">
-                <div id="lista-vitorias" class="historico-container"></div>
-            </div>
+            <div class="header-planejamento"><div><span class="badge" style="background-color: #f59e0b;">ARQUIVO</span><h1 style="color: #f8fafc; font-size: 2rem; margin: 8px 0;">Cofre de Vitórias</h1><p class="contexto-pai">O registro imutável da sua disciplina diária.</p></div></div>
+            <div class="body-planejamento"><div id="lista-vitorias" class="historico-container"></div></div>
         </section>
 
     </div>
-
     <script type="module" src="app.js"></script>
 </body>
 </html>
