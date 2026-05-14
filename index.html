@@ -1,17 +1,26 @@
-<!-- Container Principal usando CSS Grid (Agora com 3 colunas) -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Fractal - O Norte e a Trincheira</title>
+    <!-- A linha abaixo é a ponte para o design escuro -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
     <div class="dashboard-container">
         
-        <!-- NOVO: MENU LATERAL ESQUERDO (Ícones) -->
+        <!-- MENU LATERAL ESQUERDO -->
         <nav class="sidebar-icones">
             <div class="menu-superior">
-                <div class="icone logo">≡</div>
+                <div class="icone logo" title="Menu">≡</div>
                 <div class="icone ativo" title="Bússola">🧭</div>
                 <div class="icone" title="Comunidade">👥</div>
                 <div class="icone" title="Metas">🎯</div>
             </div>
             
             <div class="menu-inferior">
-                <!-- Botão de Sincronização -->
                 <div class="icone" id="btn-sync" title="Verificar Atualizações">🔄</div>
                 <div class="icone" title="Configurações">⚙️</div>
                 <div class="icone" title="Sair">🚪</div>
@@ -72,4 +81,7 @@
         </main>
 
     </div>
+
     <script src="app.js"></script>
+</body>
+</html>
