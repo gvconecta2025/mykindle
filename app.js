@@ -1,11 +1,7 @@
-// =========================================================
-// 1. IMPORTAÇÕES DO FIREBASE (Nuvem)
-// =========================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
-// SUAS CHAVES DO FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyCHK6pA45hCN1_X3WHpbWMNoADc7-7JmcQ",
   authDomain: "cincoanos-4c824.firebaseapp.com",
@@ -16,16 +12,31 @@ const firebaseConfig = {
   measurementId: "G-1LBB83ZW9W"
 };
 
-// INICIALIZA O APLICATIVO NA NUVEM
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-
-// VARIAVEL GLOBAL PARA SABER QUEM ESTÁ LOGADO
 let usuarioLogado = null;
 
 // =========================================================
-// 2. SISTEMA DE AUTENTICAÇÃO (Login / Logout)
+// 1. O RELÓGIO (Data Dinâmica)
+// =========================================================
+function atualizarData() {
+    const elData = document.getElementById('data-hoje');
+    if(elData) {
+        const diasSemana = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
+        const meses = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+        
+        const hoje = new Date();
+        const diaSemanaStr = diasSemana[hoje.getDay()];
+        const dia = hoje.getDate();
+        const mesStr = meses[hoje.getMonth()];
+        
+        elData.textContent = `HOJE: ${diaSemanaStr}, ${dia} DE ${mesStr}`;
+    }
+}
+
+// =========================================================
+// 2. AUTENTICAÇÃO E INICIALIZAÇÃO
 // =========================================================
 const loginScreen = document.getElementById('login-screen');
 const appDashboard = document.getElementById('app-dashboard');
@@ -33,51 +44,39 @@ const btnLoginGoogle = document.getElementById('btn-login-google');
 const btnLogout = document.getElementById('btn-logout');
 const userAvatar = document.getElementById('user-avatar');
 
-// Escuta as mudanças de conta (Se entrou ou saiu)
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        // Usuário logado
         usuarioLogado = user;
         loginScreen.classList.add('hidden');
         appDashboard.classList.remove('hidden');
         userAvatar.src = user.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
         
-        // Puxar dados da nuvem ao invés do localStorage
+        atualizarData(); // Roda o relógio
         await puxarDadosDaNuvem();
         atualizarProgressoTrincheira();
     } else {
-        // Ninguém logado
         usuarioLogado = null;
         appDashboard.classList.add('hidden');
         loginScreen.classList.remove('hidden');
     }
 });
 
-// Ação do Botão Entrar
 btnLoginGoogle.addEventListener('click', () => {
     const provider = new GoogleAuthProvider();
     signInWithPopup(auth, provider).catch(error => alert("Erro ao fazer login: " + error.message));
 });
 
-// Ação do Botão Sair
-btnLogout.addEventListener('click', () => {
-    signOut(auth);
-});
+btnLogout.addEventListener('click', () => signOut(auth));
 
 // =========================================================
-// 3. SISTEMA DE BANCO DE DADOS (Firestore)
+// 3. BANCO DE DADOS (Firestore)
 // =========================================================
-
-// Função mestre que envia TUDO para o Firebase
 async function salvarNaNuvem() {
     if (!usuarioLogado) return;
-
-    // 1. Coleta a Bússola
     const titulosBussola = document.querySelectorAll('.meta-titulo');
     const dadosBussola = [];
     titulosBussola.forEach(titulo => dadosBussola.push(titulo.textContent.trim()));
 
-    // 2. Coleta a Trincheira
     const listas = document.querySelectorAll('.task-list');
     const dadosTrincheira = [];
     listas.forEach((lista) => {
@@ -90,40 +89,28 @@ async function salvarNaNuvem() {
         dadosTrincheira.push(tarefas);
     });
 
-    // 3. Cria o "pacote" e manda pra nuvem vinculando ao ID do usuário
     try {
         await setDoc(doc(db, "usuarios", usuarioLogado.uid), {
             bussola: dadosBussola,
             trincheira: dadosTrincheira,
             ultimaAtualizacao: new Date().toISOString()
         }, { merge: true });
-    } catch (e) {
-        console.error("Erro ao salvar na nuvem: ", e);
-    }
+    } catch (e) { console.error("Erro Nuvem: ", e); }
 }
 
-// Função mestre que puxa TUDO do Firebase quando faz login
 async function puxarDadosDaNuvem() {
     if (!usuarioLogado) return;
-
     try {
         const docSnap = await getDoc(doc(db, "usuarios", usuarioLogado.uid));
-        
         if (docSnap.exists()) {
             const dados = docSnap.data();
-
-            // 1. Restaurar Bússola
             if (dados.bussola) {
-                const titulosBussola = document.querySelectorAll('.meta-titulo');
-                titulosBussola.forEach((titulo, index) => {
+                document.querySelectorAll('.meta-titulo').forEach((titulo, index) => {
                     if (dados.bussola[index]) titulo.textContent = dados.bussola[index];
                 });
             }
-
-            // 2. Restaurar Trincheira
             if (dados.trincheira) {
-                const listas = document.querySelectorAll('.task-list');
-                listas.forEach((lista, index) => {
+                document.querySelectorAll('.task-list').forEach((lista, index) => {
                     if (dados.trincheira[index]) {
                         lista.innerHTML = ''; 
                         dados.trincheira[index].forEach(tarefa => {
@@ -145,21 +132,17 @@ async function puxarDadosDaNuvem() {
                 });
             }
         } else {
-            // Primeiro acesso do usuário: Preenche com dados iniciais vazios/padrões
             document.querySelectorAll('.meta-titulo').forEach(t => t.textContent = "Defina sua meta");
             document.querySelectorAll('.task-list').forEach(l => l.innerHTML = '');
         }
-    } catch (e) {
-        console.error("Erro ao puxar dados: ", e);
-    }
+    } catch (e) { console.error("Erro puxar dados: ", e); }
 }
 
 // =========================================================
-// 4. MOTOR FRACTAL & UI EVENTS (Adaptado para nuvem)
+// 4. MOTOR FRACTAL, UI & VARREDURA
 // =========================================================
-
-// Atualiza a barra azul e engatilha o salvamento na nuvem
 const barraSemana = document.querySelector('.destaque-fill');
+
 function atualizarProgressoTrincheira() {
     const checkboxes = document.querySelectorAll('.task-item input[type="checkbox"]');
     if (!barraSemana) return;
@@ -180,12 +163,29 @@ function atualizarProgressoTrincheira() {
     const total = checkboxes.length;
     const porcentagem = total > 0 ? (concluidas / total) * 100 : 0;
     barraSemana.style.width = `${porcentagem}%`;
-    
-    // Salva na Nuvem a cada alteração na Trincheira
     salvarNaNuvem();
 }
 
-// Escuta cliques na Trincheira (Marcar / Excluir)
+// Botão de Varrer Concluídas
+const btnVarrer = document.getElementById('btn-varrer');
+if (btnVarrer) {
+    btnVarrer.addEventListener('click', () => {
+        const checkboxes = document.querySelectorAll('.task-item input[type="checkbox"]');
+        let limpouAlgo = false;
+        
+        checkboxes.forEach(box => {
+            if (box.checked) {
+                box.closest('.task-item').remove();
+                limpouAlgo = true;
+            }
+        });
+        
+        if(limpouAlgo) {
+            atualizarProgressoTrincheira(); // Recalcula e salva
+        }
+    });
+}
+
 const painelTrincheira = document.querySelector('.trincheira-panel');
 if(painelTrincheira) {
     painelTrincheira.addEventListener('click', (e) => {
@@ -200,15 +200,13 @@ if(painelTrincheira) {
     });
 }
 
-// Adicionar Nova Tarefa
-const botoesAdicionar = document.querySelectorAll('.btn-add');
-botoesAdicionar.forEach(botao => {
+document.querySelectorAll('.btn-add').forEach(botao => {
     botao.addEventListener('click', (e) => {
         const formContainer = e.target.parentElement;
         const inputField = formContainer.querySelector('.input-tarefa');
         const taskList = formContainer.previousElementSibling; 
-        
         const textoTarefa = inputField.value.trim();
+        
         if (textoTarefa !== '') {
             const novaLabel = document.createElement('label');
             novaLabel.className = 'task-item';
@@ -220,28 +218,20 @@ botoesAdicionar.forEach(botao => {
             `;
             taskList.appendChild(novaLabel);
             inputField.value = '';
-            atualizarProgressoTrincheira(); // Atualiza e salva na nuvem
+            atualizarProgressoTrincheira();
         }
     });
-
     const inputF = botao.parentElement.querySelector('.input-tarefa');
-    inputF.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') botao.click();
-    });
+    inputF.addEventListener('keypress', (e) => { if (e.key === 'Enter') botao.click(); });
 });
 
-// Eventos de Edição da Bússola (Salva na nuvem ao terminar de editar)
 document.querySelectorAll('.meta-titulo').forEach(titulo => {
     titulo.addEventListener('blur', salvarNaNuvem);
     titulo.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            titulo.blur(); 
-        }
+        if (e.key === 'Enter') { e.preventDefault(); titulo.blur(); }
     });
 });
 
-// Botão de Refresh PWA (Limpeza Visual)
 const btnSync = document.getElementById('btn-sync');
 if (btnSync) {
     btnSync.addEventListener('click', () => {
