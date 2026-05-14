@@ -4,12 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>App Fractal - O Norte e a Trincheira</title>
+    
+    <!-- CONEXÃO PWA: Identidade Visual -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="dashboard-container">
-        
         <!-- MENU LATERAL ESQUERDO -->
         <nav class="sidebar-icones">
             <div class="menu-superior">
@@ -18,7 +24,6 @@
                 <div class="icone" title="Comunidade">👥</div>
                 <div class="icone" title="Metas">🎯</div>
             </div>
-            
             <div class="menu-inferior">
                 <div class="icone" id="btn-sync" title="Verificar Atualizações">🔄</div>
                 <div class="icone" title="Configurações">⚙️</div>
@@ -29,7 +34,6 @@
         <!-- PAINEL ESQUERDO: A Bússola Fractal -->
         <aside class="bussola-panel">
             <h2 style="margin-bottom: 24px; font-size: 1.2rem; letter-spacing: 1px;">NORTE DE LONGO PRAZO</h2>
-            
             <div class="arvore-metas">
                 <div class="meta-item nivel-1">
                     <div class="meta-icone">🏔️</div>
@@ -39,7 +43,6 @@
                         <div class="progress-track"><div class="progress-fill" style="width: 30%;"></div></div>
                     </div>
                 </div>
-
                 <div class="meta-item nivel-2">
                     <div class="meta-icone">🎯</div>
                     <div class="meta-conteudo">
@@ -48,7 +51,6 @@
                         <div class="progress-track"><div class="progress-fill" style="width: 55%;"></div></div>
                     </div>
                 </div>
-
                 <div class="meta-item nivel-3">
                     <div class="meta-icone">🌗</div>
                     <div class="meta-conteudo">
@@ -57,7 +59,6 @@
                         <div class="progress-track"><div class="progress-fill" style="width: 45%;"></div></div>
                     </div>
                 </div>
-
                 <div class="meta-item nivel-4">
                     <div class="meta-icone">🌘</div>
                     <div class="meta-conteudo">
@@ -66,7 +67,6 @@
                         <div class="progress-track"><div class="progress-fill" style="width: 20%;"></div></div>
                     </div>
                 </div>
-
                 <div class="meta-item nivel-5">
                     <div class="meta-icone">📅</div>
                     <div class="meta-conteudo">
@@ -75,7 +75,6 @@
                         <div class="progress-track"><div class="progress-fill" style="width: 60%;"></div></div>
                     </div>
                 </div>
-
                 <div class="meta-item nivel-6 meta-ativa">
                     <div class="meta-icone">📌</div>
                     <div class="meta-conteudo">
@@ -91,7 +90,6 @@
         <main class="trincheira-panel">
             <h1 style="margin-bottom: 24px;">HOJE: QUARTA-FEIRA</h1>
             <div class="grid-temperaturas">
-                <!-- Coluna Principal (Tempo A) -->
                 <div class="coluna-a">
                     <div class="card">
                         <div class="card-header bg-vermelho">
@@ -111,8 +109,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Coluna Secundária (Tempo B e C) -->
                 <div class="coluna-bc">
                     <div class="card mb-20">
                         <div class="card-header bg-laranja">
@@ -129,7 +125,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="card">
                         <div class="card-header bg-azul">
                             <h3>TEMPO C - FRIO</h3>
@@ -148,7 +143,6 @@
                 </div>
             </div>
         </main>
-
     </div>
 
     <script src="app.js"></script>
