@@ -3,16 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Fractal - O Norte e a Trincheira</title>
+    <title>App Fractal - Produtividade</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="dashboard-container">
+    <!-- TELA DE LOGIN (Aparece se não estiver logado) -->
+    <div id="login-screen" class="login-container">
+        <div class="login-card">
+            <div class="login-icon">🏔️</div>
+            <h2>Método Fractal</h2>
+            <p>Seu ecossistema de foco e longo prazo.</p>
+            <button id="btn-login-google" class="btn-google">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google Logo" class="google-logo">
+                Entrar com o Google
+            </button>
+        </div>
+    </div>
+
+    <!-- DASHBOARD PRINCIPAL (Escondido até o login ser aprovado) -->
+    <div id="app-dashboard" class="dashboard-container hidden">
         <!-- MENU LATERAL -->
         <nav class="sidebar-icones">
             <div class="menu-superior">
@@ -22,9 +38,10 @@
                 <div class="icone" title="Metas">🎯</div>
             </div>
             <div class="menu-inferior">
+                <!-- Avatar do Usuário Logado -->
+                <img id="user-avatar" src="" alt="Perfil" class="avatar-img" title="Seu Perfil">
                 <div class="icone" id="btn-sync" title="Verificar Atualizações">🔄</div>
-                <div class="icone" title="Configurações">⚙️</div>
-                <div class="icone" title="Sair">🚪</div>
+                <div class="icone" id="btn-logout" title="Sair do App">🚪</div>
             </div>
         </nav>
 
@@ -36,7 +53,7 @@
                     <div class="meta-icone">🏔️</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">5 ANOS</span>
-                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Independência Digital</span>
+                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 30%;"></div></div>
                     </div>
                 </div>
@@ -44,7 +61,7 @@
                     <div class="meta-icone">🎯</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">1 ANO</span>
-                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Lançar 3 Livros e o App</span>
+                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 55%;"></div></div>
                     </div>
                 </div>
@@ -52,7 +69,7 @@
                     <div class="meta-icone">🌗</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">6 MESES</span>
-                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Escrever 2 Livros</span>
+                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 45%;"></div></div>
                     </div>
                 </div>
@@ -60,7 +77,7 @@
                     <div class="meta-icone">🌘</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">3 MESES</span>
-                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Livro 1: Marketing e Rotina</span>
+                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 20%;"></div></div>
                     </div>
                 </div>
@@ -68,7 +85,7 @@
                     <div class="meta-icone">📅</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">1 MÊS</span>
-                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Escrever e Revisar Conteúdo</span>
+                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 60%;"></div></div>
                     </div>
                 </div>
@@ -76,8 +93,8 @@
                     <div class="meta-icone">📌</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">ESTA SEMANA</span>
-                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Conteúdo Cap. 4</span>
-                        <div class="progress-track"><div class="progress-fill destaque-fill" style="width: 15%;"></div></div>
+                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Carregando...</span>
+                        <div class="progress-track"><div class="progress-fill destaque-fill" style="width: 0%;"></div></div>
                     </div>
                 </div>
             </div>
@@ -85,7 +102,7 @@
 
         <!-- PAINEL DIREITO: A Trincheira -->
         <main class="trincheira-panel">
-            <h1 style="margin-bottom: 24px;">HOJE: QUARTA-FEIRA</h1>
+            <h1 style="margin-bottom: 24px;">HOJE: TRINCHEIRA ATIVA</h1>
             <div class="grid-temperaturas">
                 <div class="coluna-a">
                     <div class="card">
@@ -94,7 +111,7 @@
                             <span class="subtitulo">FOCO TOTAL</span>
                         </div>
                         <div class="card-body">
-                            <div class="task-list"></div>
+                            <div class="task-list" id="lista-a"></div>
                             <div class="add-task-form">
                                 <input type="text" placeholder="Adicionar foco total..." class="input-tarefa">
                                 <button class="btn-add">+</button>
@@ -109,7 +126,7 @@
                             <span class="subtitulo">MANUTENÇÃO</span>
                         </div>
                         <div class="card-body">
-                            <div class="task-list"></div>
+                            <div class="task-list" id="lista-b"></div>
                             <div class="add-task-form">
                                 <input type="text" placeholder="Adicionar manutenção..." class="input-tarefa">
                                 <button class="btn-add">+</button>
@@ -122,7 +139,7 @@
                             <span class="subtitulo">OPCIONAL</span>
                         </div>
                         <div class="card-body">
-                            <div class="task-list"></div>
+                            <div class="task-list" id="lista-c"></div>
                             <div class="add-task-form">
                                 <input type="text" placeholder="Adicionar opcional..." class="input-tarefa">
                                 <button class="btn-add">+</button>
@@ -134,6 +151,7 @@
         </main>
     </div>
 
-    <script src="app.js"></script>
+    <!-- O TYPE="MODULE" É OBRIGATÓRIO PARA O FIREBASE FUNCIONAR NO NAVEGADOR -->
+    <script type="module" src="app.js"></script>
 </body>
 </html>
