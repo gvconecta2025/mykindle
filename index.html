@@ -14,7 +14,6 @@
 </head>
 <body>
 
-    <!-- TELA DE LOGIN (Aparece se não estiver logado) -->
     <div id="login-screen" class="login-container">
         <div class="login-card">
             <div class="login-icon">🏔️</div>
@@ -27,9 +26,7 @@
         </div>
     </div>
 
-    <!-- DASHBOARD PRINCIPAL (Escondido até o login ser aprovado) -->
     <div id="app-dashboard" class="dashboard-container hidden">
-        <!-- MENU LATERAL -->
         <nav class="sidebar-icones">
             <div class="menu-superior">
                 <div class="icone logo" title="Menu">≡</div>
@@ -38,14 +35,12 @@
                 <div class="icone" title="Metas">🎯</div>
             </div>
             <div class="menu-inferior">
-                <!-- Avatar do Usuário Logado -->
                 <img id="user-avatar" src="" alt="Perfil" class="avatar-img" title="Seu Perfil">
                 <div class="icone" id="btn-sync" title="Verificar Atualizações">🔄</div>
                 <div class="icone" id="btn-logout" title="Sair do App">🚪</div>
             </div>
         </nav>
 
-        <!-- PAINEL ESQUERDO: A Bússola Fractal -->
         <aside class="bussola-panel">
             <h2 style="margin-bottom: 24px; font-size: 1.2rem; letter-spacing: 1px;">NORTE DE LONGO PRAZO</h2>
             <div class="arvore-metas">
@@ -53,7 +48,7 @@
                     <div class="meta-icone">🏔️</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">5 ANOS</span>
-                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Carregando...</span>
+                        <span class="meta-titulo" contenteditable="true" spellcheck="false">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 30%;"></div></div>
                     </div>
                 </div>
@@ -61,7 +56,7 @@
                     <div class="meta-icone">🎯</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">1 ANO</span>
-                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Carregando...</span>
+                        <span class="meta-titulo" contenteditable="true" spellcheck="false">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 55%;"></div></div>
                     </div>
                 </div>
@@ -69,7 +64,7 @@
                     <div class="meta-icone">🌗</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">6 MESES</span>
-                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Carregando...</span>
+                        <span class="meta-titulo" contenteditable="true" spellcheck="false">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 45%;"></div></div>
                     </div>
                 </div>
@@ -77,7 +72,7 @@
                     <div class="meta-icone">🌘</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">3 MESES</span>
-                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Carregando...</span>
+                        <span class="meta-titulo" contenteditable="true" spellcheck="false">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 20%;"></div></div>
                     </div>
                 </div>
@@ -85,7 +80,7 @@
                     <div class="meta-icone">📅</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">1 MÊS</span>
-                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Carregando...</span>
+                        <span class="meta-titulo" contenteditable="true" spellcheck="false">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill" style="width: 60%;"></div></div>
                     </div>
                 </div>
@@ -93,16 +88,20 @@
                     <div class="meta-icone">📌</div>
                     <div class="meta-conteudo">
                         <span class="meta-periodo">ESTA SEMANA</span>
-                        <span class="meta-titulo" contenteditable="true" spellcheck="false" title="Clique para editar">Carregando...</span>
+                        <span class="meta-titulo" contenteditable="true" spellcheck="false">Carregando...</span>
                         <div class="progress-track"><div class="progress-fill destaque-fill" style="width: 0%;"></div></div>
                     </div>
                 </div>
             </div>
         </aside>
 
-        <!-- PAINEL DIREITO: A Trincheira -->
         <main class="trincheira-panel">
-            <h1 style="margin-bottom: 24px;">HOJE: TRINCHEIRA ATIVA</h1>
+            <!-- CABEÇALHO ATUALIZADO: Título Dinâmico + Botão de Limpeza -->
+            <div class="header-trincheira">
+                <h1 id="data-hoje">HOJE</h1>
+                <button id="btn-varrer" class="btn-varrer" title="Limpar tarefas marcadas">🧹 Varrer Concluídas</button>
+            </div>
+
             <div class="grid-temperaturas">
                 <div class="coluna-a">
                     <div class="card">
@@ -151,7 +150,6 @@
         </main>
     </div>
 
-    <!-- O TYPE="MODULE" É OBRIGATÓRIO PARA O FIREBASE FUNCIONAR NO NAVEGADOR -->
     <script type="module" src="app.js"></script>
 </body>
 </html>
