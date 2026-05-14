@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>App Fractal - O Norte e a Trincheira</title>
-    <!-- A linha abaixo é a ponte para o design escuro -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -21,16 +20,78 @@
             </div>
             
             <div class="menu-inferior">
+                <!-- Botão de Sincronização -->
                 <div class="icone" id="btn-sync" title="Verificar Atualizações">🔄</div>
                 <div class="icone" title="Configurações">⚙️</div>
                 <div class="icone" title="Sair">🚪</div>
             </div>
         </nav>
 
-        <!-- PAINEL ESQUERDO: A Bússola -->
+        <!-- PAINEL ESQUERDO: A Bússola Fractal -->
         <aside class="bussola-panel">
-            <h2>NORTE DE LONGO PRAZO</h2>
-            <p style="color: #64748b; font-size: 0.9rem; margin-top: 10px;">Árvore de metas entrará aqui...</p>
+            <h2 style="margin-bottom: 24px; font-size: 1.2rem; letter-spacing: 1px;">NORTE DE LONGO PRAZO</h2>
+            
+            <div class="arvore-metas">
+                <!-- Nível 1: 5 Anos -->
+                <div class="meta-item nivel-1">
+                    <div class="meta-icone">🏔️</div>
+                    <div class="meta-conteudo">
+                        <span class="meta-periodo">5 ANOS</span>
+                        <span class="meta-titulo">Independência Digital</span>
+                        <div class="progress-track"><div class="progress-fill" style="width: 30%;"></div></div>
+                    </div>
+                </div>
+
+                <!-- Nível 2: 1 Ano -->
+                <div class="meta-item nivel-2">
+                    <div class="meta-icone">🎯</div>
+                    <div class="meta-conteudo">
+                        <span class="meta-periodo">1 ANO</span>
+                        <span class="meta-titulo">Lançar 3 Livros e o App</span>
+                        <div class="progress-track"><div class="progress-fill" style="width: 55%;"></div></div>
+                    </div>
+                </div>
+
+                <!-- Nível 3: 6 Meses -->
+                <div class="meta-item nivel-3">
+                    <div class="meta-icone">🌗</div>
+                    <div class="meta-conteudo">
+                        <span class="meta-periodo">6 MESES</span>
+                        <span class="meta-titulo">Escrever 2 Livros</span>
+                        <div class="progress-track"><div class="progress-fill" style="width: 45%;"></div></div>
+                    </div>
+                </div>
+
+                <!-- Nível 4: 3 Meses -->
+                <div class="meta-item nivel-4">
+                    <div class="meta-icone">🌘</div>
+                    <div class="meta-conteudo">
+                        <span class="meta-periodo">3 MESES</span>
+                        <span class="meta-titulo">Livro 1: Marketing e Rotina</span>
+                        <div class="progress-track"><div class="progress-fill" style="width: 20%;"></div></div>
+                    </div>
+                </div>
+
+                <!-- Nível 5: 1 Mês -->
+                <div class="meta-item nivel-5">
+                    <div class="meta-icone">📅</div>
+                    <div class="meta-conteudo">
+                        <span class="meta-periodo">1 MÊS</span>
+                        <span class="meta-titulo">Escrever e Revisar Conteúdo</span>
+                        <div class="progress-track"><div class="progress-fill" style="width: 60%;"></div></div>
+                    </div>
+                </div>
+
+                <!-- Nível 6: Semana (DESTAQUE) -->
+                <div class="meta-item nivel-6 meta-ativa">
+                    <div class="meta-icone">📌</div>
+                    <div class="meta-conteudo">
+                        <span class="meta-periodo">ESTA SEMANA</span>
+                        <span class="meta-titulo">Conteúdo Cap. 4</span>
+                        <div class="progress-track"><div class="progress-fill destaque-fill" style="width: 15%;"></div></div>
+                    </div>
+                </div>
+            </div>
         </aside>
 
         <!-- PAINEL DIREITO: A Trincheira -->
