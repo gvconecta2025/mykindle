@@ -1,0 +1,17 @@
+{
+  "name": "App Fractal de Produtividade",
+  "short_name": "Fractal",
+  "description": "O seu Norte de longo prazo alinhado à sua Trincheira diária.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3203/3203071.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
