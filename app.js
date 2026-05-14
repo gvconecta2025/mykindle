@@ -75,7 +75,6 @@ function verificarAcessoVisual(temAcesso) {
 
 async function salvarNaNuvem() {
     if (!usuarioLogado || !acessoPermitido) return;
-
     const listas = document.querySelectorAll('.task-list');
     const dadosTrincheira = [];
     listas.forEach((lista) => {
@@ -87,13 +86,10 @@ async function salvarNaNuvem() {
         });
         dadosTrincheira.push(tarefas);
     });
-
     try {
         await setDoc(doc(db, "usuarios", usuarioLogado.uid), {
-            eixosGlobais: eixosGlobais,
-            eixoAtivoIndex: eixoAtivoIndex,
-            trincheira: dadosTrincheira,
-            historico: historicoVitoriasGlobais,
+            eixosGlobais: eixosGlobais, eixoAtivoIndex: eixoAtivoIndex,
+            trincheira: dadosTrincheira, historico: historicoVitoriasGlobais,
             ultimaAtualizacao: new Date().toISOString()
         }, { merge: true });
     } catch (e) { console.error("Erro Nuvem: ", e); }
@@ -112,29 +108,14 @@ async function puxarDadosDaNuvem() {
     if (!usuarioLogado) return;
     try {
         const docSnap = await getDoc(doc(db, "usuarios", usuarioLogado.uid));
-        
         if (docSnap.exists()) {
             const dados = docSnap.data();
             verificarAcessoVisual(dados.acessoLiberado === true);
-
-            if (dados.eixosGlobais) {
-                eixosGlobais = dados.eixosGlobais;
-                eixoAtivoIndex = dados.eixoAtivoIndex !== undefined ? dados.eixoAtivoIndex : 0;
-            } else if (dados.bussola) {
-                eixosGlobais = [{
-                    nome: "Eixo Principal",
-                    bussola: dados.bussola,
-                    bussolaNotas: dados.bussolaNotas || ["","","","","",""]
-                }];
-                eixoAtivoIndex = 0;
-            } else {
-                criarEixoInicial();
-            }
-
-            renderizarSeletorEixos();
-            carregarBussolaVisual();
+            if (dados.eixosGlobais) { eixosGlobais = dados.eixosGlobais; eixoAtivoIndex = dados.eixoAtivoIndex || 0; }
+            else if (dados.bussola) { eixosGlobais = [{ nome: "Eixo Principal", bussola: dados.bussola, bussolaNotas: dados.bussolaNotas || ["","","","","",""] }]; eixoAtivoIndex = 0; }
+            else { criarEixoInicial(); }
+            renderizarSeletorEixos(); carregarBussolaVisual();
             if (dados.historico) historicoVitoriasGlobais = dados.historico; 
-
             if (dados.trincheira) {
                 document.querySelectorAll('.task-list').forEach((lista, index) => {
                     if (dados.trincheira[index]) {
@@ -142,14 +123,11 @@ async function puxarDadosDaNuvem() {
                         dados.trincheira[index].forEach(tarefa => {
                             const novaLabel = document.createElement('label');
                             novaLabel.className = 'task-item';
-                            const opacity = tarefa.concluido ? '0.5' : '1';
-                            const decoration = tarefa.concluido ? 'line-through' : 'none';
-                            
                             novaLabel.innerHTML = `
                                 <div class="task-content">
                                     <input type="checkbox" ${tarefa.concluido ? 'checked' : ''}> 
                                     <span class="checkmark"></span>
-                                    <span class="task-text" style="opacity: ${opacity}; text-decoration: ${decoration};">${tarefa.texto}</span>
+                                    <span class="task-text">${tarefa.texto}</span>
                                 </div>
                                 <button class="btn-delete" title="Excluir">🗑️</button>
                             `;
@@ -158,13 +136,7 @@ async function puxarDadosDaNuvem() {
                     }
                 });
             }
-        } else {
-            verificarAcessoVisual(false);
-            criarEixoInicial();
-            renderizarSeletorEixos();
-            carregarBussolaVisual();
-            await setDoc(doc(db, "usuarios", usuarioLogado.uid), { acessoLiberado: false, emailOrigem: usuarioLogado.email, eixosGlobais: eixosGlobais, eixoAtivoIndex: 0 });
-        }
+        } else { verificarAcessoVisual(false); criarEixoInicial(); renderizarSeletorEixos(); carregarBussolaVisual(); await setDoc(doc(db, "usuarios", usuarioLogado.uid), { acessoLiberado: false, emailOrigem: usuarioLogado.email, eixosGlobais: eixosGlobais, eixoAtivoIndex: 0 }); }
         atualizarProgressoTrincheira();
     } catch (e) { console.error("Erro puxar dados: ", e); }
 }
@@ -178,8 +150,7 @@ function renderizarSeletorEixos() {
     selectEixo.innerHTML = '';
     eixosGlobais.forEach((eixo, index) => {
         const option = document.createElement('option');
-        option.value = index;
-        option.textContent = eixo.nome;
+        option.value = index; option.textContent = eixo.nome;
         if (index === eixoAtivoIndex) option.selected = true;
         selectEixo.appendChild(option);
     });
@@ -193,53 +164,26 @@ function carregarBussolaVisual() {
     });
 }
 
-selectEixo.addEventListener('change', (e) => {
-    eixoAtivoIndex = parseInt(e.target.value);
-    carregarBussolaVisual();
-    salvarNaNuvem(); 
-});
-
+selectEixo.addEventListener('change', (e) => { eixoAtivoIndex = parseInt(e.target.value); carregarBussolaVisual(); salvarNaNuvem(); });
 btnNovoEixo.addEventListener('click', () => {
     const nomeNovo = prompt("Nome do novo Eixo:");
     if (nomeNovo && nomeNovo.trim() !== "") {
-        eixosGlobais.push({
-            nome: nomeNovo.trim(),
-            bussola: ["Sua grande visão em 5 anos...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta..."],
-            bussolaNotas: ["", "", "", "", "", ""]
-        });
-        eixoAtivoIndex = eixosGlobais.length - 1; 
-        renderizarSeletorEixos();
-        carregarBussolaVisual();
-        salvarNaNuvem();
+        eixosGlobais.push({ nome: nomeNovo.trim(), bussola: ["Sua grande visão em 5 anos...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta...", "Defina sua meta..."], bussolaNotas: ["", "", "", "", "", ""] });
+        eixoAtivoIndex = eixosGlobais.length - 1; renderizarSeletorEixos(); carregarBussolaVisual(); salvarNaNuvem();
     }
 });
-
 btnEditarEixo.addEventListener('click', () => {
     if(eixosGlobais.length === 0) return;
     const nomeAtual = eixosGlobais[eixoAtivoIndex].nome;
     const novoNome = prompt(`Renomear "${nomeAtual}" para:`, nomeAtual);
-    if (novoNome && novoNome.trim() !== "" && novoNome !== nomeAtual) {
-        eixosGlobais[eixoAtivoIndex].nome = novoNome.trim();
-        renderizarSeletorEixos();
-        salvarNaNuvem();
-    }
+    if (novoNome && novoNome.trim() !== "" && novoNome !== nomeAtual) { eixosGlobais[eixoAtivoIndex].nome = novoNome.trim(); renderizarSeletorEixos(); salvarNaNuvem(); }
 });
-
 btnExcluirEixo.addEventListener('click', () => {
     if(eixosGlobais.length === 0) return;
-    const nomeAtual = eixosGlobais[eixoAtivoIndex].nome;
-    const confirma = confirm(`Tem certeza que deseja apagar todo o eixo "${nomeAtual}" e suas metas de longo prazo?`);
-    
-    if (confirma) {
+    if (confirm(`Excluir eixo "${eixosGlobais[eixoAtivoIndex].nome}"?`)) {
         eixosGlobais.splice(eixoAtivoIndex, 1); 
-        if(eixosGlobais.length === 0) {
-            criarEixoInicial();
-        } else {
-            eixoAtivoIndex = 0;
-        }
-        renderizarSeletorEixos();
-        carregarBussolaVisual();
-        salvarNaNuvem();
+        if(eixosGlobais.length === 0) { criarEixoInicial(); } else { eixoAtivoIndex = 0; }
+        renderizarSeletorEixos(); carregarBussolaVisual(); salvarNaNuvem();
     }
 });
 
@@ -249,82 +193,37 @@ const painelVitorias = document.getElementById('painel-vitorias');
 const navBussola = document.getElementById('nav-bussola');
 const navVitorias = document.getElementById('nav-vitorias');
 
-navBussola.addEventListener('click', () => {
-    document.querySelectorAll('.icone').forEach(i => i.classList.remove('ativo'));
-    navBussola.classList.add('ativo');
-    painelPlanejamento.classList.add('hidden');
-    painelVitorias.classList.add('hidden');
-    painelTrincheira.classList.remove('hidden');
-});
+navBussola.addEventListener('click', () => { document.querySelectorAll('.icone').forEach(i => i.classList.remove('ativo')); navBussola.classList.add('ativo'); painelPlanejamento.classList.add('hidden'); painelVitorias.classList.add('hidden'); painelTrincheira.classList.remove('hidden'); });
+navVitorias.addEventListener('click', () => { document.querySelectorAll('.icone').forEach(i => i.classList.remove('ativo')); navVitorias.classList.add('ativo'); painelTrincheira.classList.add('hidden'); painelPlanejamento.classList.add('hidden'); painelVitorias.classList.remove('hidden'); renderizarHistorico(); });
 
-navVitorias.addEventListener('click', () => {
-    document.querySelectorAll('.icone').forEach(i => i.classList.remove('ativo'));
-    navVitorias.classList.add('ativo');
-    painelTrincheira.classList.add('hidden');
-    painelPlanejamento.classList.add('hidden');
-    painelVitorias.classList.remove('hidden');
-    renderizarHistorico(); 
-});
-
-const planBadge = document.getElementById('plan-badge-periodo');
-const planContextoPai = document.getElementById('plan-contexto-pai');
 const planInputMeta = document.getElementById('plan-input-meta');
 const planInputNotas = document.getElementById('plan-input-notas');
-const planDicaFilho = document.getElementById('plan-dica-filho');
 let nivelAtualEditando = -1; 
-
-const fractalMapeamento = [
-    { periodo: "5 ANOS", pai: "Este é o seu Norte Estelar Supremo.", filho: "Você desdobrará isso em 5 metas anuais consistentes." },
-    { periodo: "1 ANO", pai: "A Meta de 5 Anos", filho: "Divida em 2 Grandes Semestres (6 meses)." },
-    { periodo: "6 MESES", pai: "A Meta de 1 Ano", filho: "Próximo passo: focar no Trimestre (3 meses)." },
-    { periodo: "3 MESES", pai: "A Meta Semestral (6 Meses)", filho: "Reduza o foco para metas mensais táticas." },
-    { periodo: "1 MÊS", pai: "O Fechamento do Trimestre", filho: "Isso se transformará nas 4 batalhas semanais." },
-    { periodo: "ESTA SEMANA", pai: "O Objetivo do Mês", filho: "Fatie esta meta em tarefas diárias na Trincheira." }
-];
 
 document.querySelectorAll('.meta-item').forEach(item => {
     item.addEventListener('click', () => {
+        // GERENCIAR SELEÇÃO E BRILHO
         document.querySelectorAll('.meta-item').forEach(i => i.classList.remove('selecionado'));
         item.classList.add('selecionado');
-        const nivelStr = item.getAttribute('data-nivel');
-        nivelAtualEditando = parseInt(nivelStr);
-        
-        const configFase = fractalMapeamento[nivelAtualEditando];
+
+        nivelAtualEditando = parseInt(item.getAttribute('data-nivel'));
         const eixoAtual = eixosGlobais[eixoAtivoIndex];
-        
-        let textoPaiReal = configFase.pai;
-        if (nivelAtualEditando > 0) {
-            textoPaiReal = `Alimenta: "${eixoAtual.bussola[nivelAtualEditando - 1]}"`;
-        }
-        
-        planBadge.textContent = `PLANEJAMENTO: ${configFase.periodo} - [${eixoAtual.nome.toUpperCase()}]`;
-        planContextoPai.textContent = textoPaiReal;
-        
-        const tituloAtual = eixoAtual.bussola[nivelAtualEditando];
-        planInputMeta.value = tituloAtual === "Defina sua meta..." || tituloAtual === "Sua grande visão em 5 anos..." ? "" : tituloAtual;
+        const config = ["5 ANOS", "1 ANO", "6 MESES", "3 MESES", "1 MÊS", "ESTA SEMANA"];
+        document.getElementById('plan-badge-periodo').textContent = `PLANEJAMENTO: ${config[nivelAtualEditando]} - [${eixoAtual.nome.toUpperCase()}]`;
+        document.getElementById('plan-contexto-pai').textContent = nivelAtualEditando > 0 ? `Alimenta: "${eixoAtual.bussola[nivelAtualEditando - 1]}"` : "Este é o seu Norte Estelar Supremo.";
+        planInputMeta.value = (eixoAtual.bussola[nivelAtualEditando] === "Defina sua meta..." || eixoAtual.bussola[nivelAtualEditando] === "Sua grande visão em 5 anos...") ? "" : eixoAtual.bussola[nivelAtualEditando];
         planInputNotas.value = eixoAtual.bussolaNotas[nivelAtualEditando] || ""; 
-        planDicaFilho.textContent = configFase.filho;
-        
-        painelTrincheira.classList.add('hidden');
-        painelVitorias.classList.add('hidden');
-        painelPlanejamento.classList.remove('hidden');
+        painelTrincheira.classList.add('hidden'); painelVitorias.classList.add('hidden'); painelPlanejamento.classList.remove('hidden');
     });
 });
 
 document.getElementById('btn-fechar-planejamento').addEventListener('click', () => {
     if (nivelAtualEditando > -1) {
-        const novoTexto = planInputMeta.value.trim();
-        if (novoTexto !== "") {
-            eixosGlobais[eixoAtivoIndex].bussola[nivelAtualEditando] = novoTexto;
-        }
+        if (planInputMeta.value.trim() !== "") eixosGlobais[eixoAtivoIndex].bussola[nivelAtualEditando] = planInputMeta.value.trim();
         eixosGlobais[eixoAtivoIndex].bussolaNotas[nivelAtualEditando] = planInputNotas.value;
-        
-        carregarBussolaVisual(); 
-        salvarNaNuvem();
+        carregarBussolaVisual(); salvarNaNuvem();
     }
-    document.querySelectorAll('.meta-item').forEach(i => i.classList.remove('selecionado'));
-    painelPlanejamento.classList.add('hidden');
-    navBussola.click(); 
+    painelPlanejamento.classList.add('hidden'); navBussola.click(); 
 });
 
 const barraSemana = document.querySelector('.destaque-fill');
@@ -334,115 +233,54 @@ const barraProgressoHoje = document.getElementById('barra-progresso-hoje');
 
 function atualizarProgressoTrincheira() {
     const checkboxes = document.querySelectorAll('.task-item input[type="checkbox"]');
-    
     let concluidas = 0;
     checkboxes.forEach(box => {
         const textoLabel = box.parentElement.querySelector('.task-text'); 
-        if (box.checked) {
-            concluidas++;
-            textoLabel.style.opacity = '0.5';
-            textoLabel.style.textDecoration = 'line-through';
-        } else {
-            textoLabel.style.opacity = '1';
-            textoLabel.style.textDecoration = 'none';
-        }
+        if (box.checked) { concluidas++; textoLabel.style.opacity = '0.5'; textoLabel.style.textDecoration = 'line-through'; }
+        else { textoLabel.style.opacity = '1'; textoLabel.style.textDecoration = 'none'; }
     });
-
     const total = checkboxes.length;
     const porcentagem = total > 0 ? Math.round((concluidas / total) * 100) : 0;
-    
-    if (barraSemana && porcSemana) {
-        barraSemana.style.width = `${porcentagem}%`;
-        porcSemana.textContent = `${porcentagem}%`;
-    }
-
-    if (textoProgressoHoje && barraProgressoHoje) {
-        textoProgressoHoje.textContent = `${concluidas}/${total} TAREFAS CONCLUÍDAS (${porcentagem}%)`;
-        barraProgressoHoje.style.width = `${porcentagem}%`;
-    }
-
+    if (barraSemana && porcSemana) { barraSemana.style.width = `${porcentagem}%`; porcSemana.textContent = `${porcentagem}%`; }
+    if (textoProgressoHoje && barraProgressoHoje) { textoProgressoHoje.textContent = `${concluidas}/${total} TAREFAS CONCLUÍDAS (${porcentagem}%)`; barraProgressoHoje.style.width = `${porcentagem}%`; }
     salvarNaNuvem();
 }
 
-const btnVarrer = document.getElementById('btn-varrer');
-if (btnVarrer) {
-    btnVarrer.addEventListener('click', () => {
-        let limpouAlgo = false;
-        const dataAtual = new Date();
-        const dataFormatada = `${dataAtual.getDate().toString().padStart(2, '0')}/${(dataAtual.getMonth()+1).toString().padStart(2, '0')}/${dataAtual.getFullYear()} às ${dataAtual.getHours().toString().padStart(2, '0')}:${dataAtual.getMinutes().toString().padStart(2, '0')}`;
-
-        document.querySelectorAll('.task-item input[type="checkbox"]').forEach(box => {
-            if (box.checked) { 
-                const textoTarefa = box.closest('.task-item').querySelector('.task-text').textContent;
-                historicoVitoriasGlobais.push({ texto: textoTarefa, dataStr: dataFormatada });
-                box.closest('.task-item').remove(); 
-                limpouAlgo = true; 
-            }
-        });
-        if(limpouAlgo) atualizarProgressoTrincheira(); 
+document.getElementById('btn-varrer').addEventListener('click', () => {
+    let limpouAlgo = false; const data = new Date(); const dataStr = `${data.getDate().toString().padStart(2, '0')}/${(data.getMonth()+1).toString().padStart(2, '0')}/${data.getFullYear()} às ${data.getHours().toString().padStart(2, '0')}:${data.getMinutes().toString().padStart(2, '0')}`;
+    document.querySelectorAll('.task-item input[type="checkbox"]').forEach(box => {
+        if (box.checked) { historicoVitoriasGlobais.push({ texto: box.closest('.task-item').querySelector('.task-text').textContent, dataStr: dataStr }); box.closest('.task-item').remove(); limpouAlgo = true; }
     });
-}
-
-function renderizarHistorico() {
-    const listaHtml = document.getElementById('lista-vitorias');
-    listaHtml.innerHTML = '';
-    if (historicoVitoriasGlobais.length === 0) {
-        listaHtml.innerHTML = '<p class="vazio-msg">Seu cofre está vazio. Conclua e varra tarefas na Trincheira para preenchê-lo.</p>';
-        return;
-    }
-    const historicoReverso = [...historicoVitoriasGlobais].reverse();
-    historicoReverso.forEach(vitoria => {
-        const item = document.createElement('div');
-        item.className = 'vitoria-item';
-        item.innerHTML = `<div class="vitoria-texto">${vitoria.texto}</div><div class="vitoria-data">${vitoria.dataStr}</div>`;
-        listaHtml.appendChild(item);
-    });
-}
-
-if(painelTrincheira) {
-    painelTrincheira.addEventListener('click', (e) => {
-        if (e.target.classList.contains('btn-delete')) {
-            e.preventDefault(); 
-            e.target.closest('.task-item').remove();
-            atualizarProgressoTrincheira(); 
-        }
-    });
-    painelTrincheira.addEventListener('change', (e) => {
-        if (e.target.type === 'checkbox') atualizarProgressoTrincheira();
-    });
-}
-
-document.querySelectorAll('.btn-add').forEach(botao => {
-    botao.addEventListener('click', (e) => {
-        const formContainer = e.target.parentElement;
-        const inputField = formContainer.querySelector('.input-tarefa');
-        const taskList = formContainer.previousElementSibling; 
-        const textoTarefa = inputField.value.trim();
-        
-        if (textoTarefa !== '') {
-            const novaLabel = document.createElement('label');
-            novaLabel.className = 'task-item';
-            novaLabel.innerHTML = `
-                <div class="task-content">
-                    <input type="checkbox"> 
-                    <span class="checkmark"></span>
-                    <span class="task-text">${textoTarefa}</span>
-                </div>
-                <button class="btn-delete" title="Excluir">🗑️</button>
-            `;
-            taskList.appendChild(novaLabel);
-            inputField.value = '';
-            atualizarProgressoTrincheira();
-        }
-    });
-    const inputF = botao.parentElement.querySelector('.input-tarefa');
-    inputF.addEventListener('keypress', (e) => { if (e.key === 'Enter') botao.click(); });
+    if(limpouAlgo) atualizarProgressoTrincheira(); 
 });
 
-const btnSync = document.getElementById('btn-sync');
-if (btnSync) {
-    btnSync.addEventListener('click', () => {
-        btnSync.style.transform = 'rotate(180deg)';
-        setTimeout(() => window.location.reload(true), 300); 
+function renderizarHistorico() {
+    const lista = document.getElementById('lista-vitorias'); lista.innerHTML = '';
+    if (historicoVitoriasGlobais.length === 0) { lista.innerHTML = '<p class="vazio-msg">Seu cofre está vazio.</p>'; return; }
+    [...historicoVitoriasGlobais].reverse().forEach(v => {
+        const item = document.createElement('div'); item.className = 'vitoria-item';
+        item.innerHTML = `<div class="vitoria-texto">${v.texto}</div><div class="vitoria-data">${v.dataStr}</div>`;
+        lista.appendChild(item);
     });
 }
+
+document.getElementById('painel-trincheira').addEventListener('click', (e) => {
+    if (e.target.classList.contains('btn-delete')) { e.target.closest('.task-item').remove(); atualizarProgressoTrincheira(); }
+});
+document.getElementById('painel-trincheira').addEventListener('change', (e) => {
+    if (e.target.type === 'checkbox') atualizarProgressoTrincheira();
+});
+
+document.querySelectorAll('.btn-add').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const input = e.target.parentElement.querySelector('.input-tarefa');
+        if (input.value.trim() !== '') {
+            const item = document.createElement('label'); item.className = 'task-item';
+            item.innerHTML = `<div class="task-content"><input type="checkbox"><span class="checkmark"></span><span class="task-text">${input.value.trim()}</span></div><button class="btn-delete" title="Excluir">🗑️</button>`;
+            e.target.parentElement.previousElementSibling.appendChild(item); input.value = ''; atualizarProgressoTrincheira();
+        }
+    });
+    btn.parentElement.querySelector('.input-tarefa').addEventListener('keypress', (e) => { if (e.key === 'Enter') btn.click(); });
+});
+
+document.getElementById('btn-sync').addEventListener('click', () => { document.getElementById('btn-sync').style.transform = 'rotate(180deg)'; setTimeout(() => window.location.reload(true), 300); });
